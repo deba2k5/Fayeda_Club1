@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
@@ -17,6 +16,8 @@ import {
   LogOut,
   Home,
   Settings,
+  Gift,
+  X,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -35,58 +36,74 @@ import {
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { storesData, getAllCoupons, getAllGiftCards, cropImageTo64x64 } from "@/lib/data"
 
-// Mock data
+// Mock data for dashboard stats
 const dashboardStats = {
-  totalBrands: 48,
-  totalCoupons: 156,
-  activeCoupons: 142,
-  expiringSoon: 8,
+  totalBrands: Object.keys(storesData).length,
+  totalCoupons: getAllCoupons().length,
+  totalGiftCards: getAllGiftCards().length,
+  activeCoupons: getAllCoupons().filter((c) => c.expiryDays > 0).length,
+  expiringSoon: getAllCoupons().filter((c) => c.expiryDays <= 3).length,
 }
-
-const recentBrands = [
-  { id: 1, name: "Amazon", logo: "/amazon-logo.png", coupons: 25, status: "active" },
-  { id: 2, name: "Myntra", logo: "/myntra-logo.png", coupons: 18, status: "active" },
-  { id: 3, name: "Zomato", logo: "/generic-food-delivery-logo.png", coupons: 12, status: "active" },
-  { id: 4, name: "Flipkart", logo: "/flipkart-logo.png", coupons: 22, status: "active" },
-  { id: 5, name: "Swiggy", logo: "/generic-food-delivery-logo.png", coupons: 15, status: "active" },
-]
-
-const recentCoupons = [
-  {
-    id: 1,
-    title: "Flat 50% Off on Electronics",
-    brand: "Amazon",
-    code: "SAVE50",
-    expiryDate: "2025-08-15",
-    status: "active",
-  },
-  { id: 2, title: "Buy 2 Get 1 Free", brand: "Myntra", code: "FASHION3", expiryDate: "2025-08-20", status: "active" },
-  { id: 3, title: "Free Delivery", brand: "Zomato", code: "", expiryDate: "2025-08-18", status: "active" },
-  { id: 4, title: "Extra 20% Off", brand: "Flipkart", code: "HOME20", expiryDate: "2025-08-14", status: "expiring" },
-  { id: 5, title: "Weekend Special", brand: "Swiggy", code: "WEEKEND60", expiryDate: "2025-08-13", status: "expiring" },
-]
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview")
   const [searchQuery, setSearchQuery] = useState("")
   const [isAddBrandOpen, setIsAddBrandOpen] = useState(false)
   const [isAddCouponOpen, setIsAddCouponOpen] = useState(false)
+  const [isAddGiftCardOpen, setIsAddGiftCardOpen] = useState(false)
 
-  const [newBrand, setNewBrand] = useState({ name: "", logo: "" })
+  // State for forms
+  const [newBrand, setNewBrand] = useState({ name: "", logo: "", description: "", website: "" })
   const [newCoupon, setNewCoupon] = useState({
     title: "",
     brand: "",
     code: "",
     description: "",
-    expiryDate: "",
+    expiryDays: "",
     type: "code",
+    savings: "",
+    category: "",
+    featured: false,
+  })
+  const [newGiftCard, setNewGiftCard] = useState({
+    name: "",
+    logo: "",
+    description: "",
+    category: "",
+    denominations: "",
+    minAmount: "",
+    maxAmount: "",
+    cashback: "",
+    featured: false,
   })
 
-  const [brands, setBrands] = useState(recentBrands)
-  const [coupons, setCoupons] = useState(recentCoupons)
-  const [editingBrand, setEditingBrand] = useState(null)
-  const [editingCoupon, setEditingCoupon] = useState(null)
+  // State for data (in real app, this would come from API/database)
+  const [brands, setBrands] = useState(Object.values(storesData))
+  const [coupons, setCoupons] = useState(getAllCoupons())
+  const [giftCards, setGiftCards] = useState(getAllGiftCards())
+  const [editingItem, setEditingItem] = useState<any>(null)
+
+  // Image upload handling
+  const [uploadingImage, setUploadingImage] = useState(false)
+
+  const handleImageUpload = async (file: File, type: "brand" | "giftcard") => {
+    setUploadingImage(true)
+    try {
+      const croppedImage = await cropImageTo64x64(file)
+      if (type === "brand") {
+        setNewBrand({ ...newBrand, logo: croppedImage })
+      } else {
+        setNewGiftCard({ ...newGiftCard, logo: croppedImage })
+      }
+    } catch (error) {
+      console.error("Error cropping image:", error)
+      alert("Error processing image. Please try again.")
+    } finally {
+      setUploadingImage(false)
+    }
+  }
 
   const handleAddBrand = (e: React.FormEvent) => {
     e.preventDefault()
@@ -94,12 +111,22 @@ export default function AdminDashboard() {
       id: brands.length + 1,
       name: newBrand.name,
       logo: newBrand.logo || "/placeholder.svg",
-      coupons: 0,
-      status: "active",
+      description: newBrand.description,
+      website: newBrand.website,
+      rating: 4.5,
+      totalCoupons: 0,
+      categories: ["General"],
+      coupons: [],
     }
-    setBrands([...brands, newBrandData])
-    setIsAddBrandOpen(false)
-    setNewBrand({ name: "", logo: "" })
+
+    if (editingItem) {
+      setBrands(brands.map((brand) => (brand.id === editingItem.id ? { ...newBrandData, id: editingItem.id } : brand)))
+      setEditingItem(null)
+    } else {
+      setBrands([...brands, newBrandData])
+    }
+
+    resetBrandForm()
   }
 
   const handleAddCoupon = (e: React.FormEvent) => {
@@ -107,54 +134,163 @@ export default function AdminDashboard() {
     const newCouponData = {
       id: coupons.length + 1,
       title: newCoupon.title,
-      brand: newCoupon.brand,
+      description: newCoupon.description,
       code: newCoupon.code,
-      expiryDate: newCoupon.expiryDate,
-      status: "active",
+      expiryDays: Number.parseInt(newCoupon.expiryDays),
+      type: newCoupon.type as "code" | "deal",
+      savings: newCoupon.savings,
+      category: newCoupon.category,
+      featured: newCoupon.featured,
+      store: newCoupon.brand,
+      storeLogo: brands.find((b) => b.name === newCoupon.brand)?.logo || "/placeholder.svg",
+      storeRating: 4.5,
     }
-    setCoupons([...coupons, newCouponData])
-    setIsAddCouponOpen(false)
-    setNewCoupon({ title: "", brand: "", code: "", description: "", expiryDate: "", type: "code" })
+
+    if (editingItem) {
+      setCoupons(
+        coupons.map((coupon) => (coupon.id === editingItem.id ? { ...newCouponData, id: editingItem.id } : coupon)),
+      )
+      setEditingItem(null)
+    } else {
+      setCoupons([...coupons, newCouponData])
+    }
+
+    resetCouponForm()
+  }
+
+  const handleAddGiftCard = (e: React.FormEvent) => {
+    e.preventDefault()
+    const denominations = newGiftCard.denominations
+      .split(",")
+      .map((d) => Number.parseInt(d.trim()))
+      .filter((d) => !isNaN(d))
+
+    const newGiftCardData = {
+      id: giftCards.length + 1,
+      name: newGiftCard.name,
+      logo: newGiftCard.logo || "/placeholder.svg",
+      description: newGiftCard.description,
+      category: newGiftCard.category,
+      denominations,
+      customAmount: {
+        min: Number.parseInt(newGiftCard.minAmount),
+        max: Number.parseInt(newGiftCard.maxAmount),
+      },
+      cashback: newGiftCard.cashback,
+      featured: newGiftCard.featured,
+      color: "from-blue-400 to-blue-600",
+    }
+
+    if (editingItem) {
+      setGiftCards(
+        giftCards.map((card) => (card.id === editingItem.id ? { ...newGiftCardData, id: editingItem.id } : card)),
+      )
+      setEditingItem(null)
+    } else {
+      setGiftCards([...giftCards, newGiftCardData])
+    }
+
+    resetGiftCardForm()
   }
 
   const handleDeleteBrand = (brandId: number) => {
-    setBrands(brands.filter((brand) => brand.id !== brandId))
-    setCoupons(coupons.filter((coupon) => coupon.brand !== brands.find((b) => b.id === brandId)?.name))
+    if (confirm("Are you sure you want to delete this brand? This will also remove all associated coupons.")) {
+      setBrands(brands.filter((brand) => brand.id !== brandId))
+      setCoupons(coupons.filter((coupon) => coupon.store !== brands.find((b) => b.id === brandId)?.name))
+    }
   }
 
   const handleDeleteCoupon = (couponId: number) => {
-    setCoupons(coupons.filter((coupon) => coupon.id !== couponId))
+    if (confirm("Are you sure you want to delete this coupon?")) {
+      setCoupons(coupons.filter((coupon) => coupon.id !== couponId))
+    }
+  }
+
+  const handleDeleteGiftCard = (cardId: number) => {
+    if (confirm("Are you sure you want to delete this gift card?")) {
+      setGiftCards(giftCards.filter((card) => card.id !== cardId))
+    }
   }
 
   const handleEditBrand = (brand: any) => {
-    setEditingBrand(brand)
-    setNewBrand({ name: brand.name, logo: brand.logo })
+    setEditingItem(brand)
+    setNewBrand({
+      name: brand.name,
+      logo: brand.logo,
+      description: brand.description,
+      website: brand.website,
+    })
     setIsAddBrandOpen(true)
   }
 
   const handleEditCoupon = (coupon: any) => {
-    setEditingCoupon(coupon)
+    setEditingItem(coupon)
     setNewCoupon({
       title: coupon.title,
-      brand: coupon.brand,
+      brand: coupon.store,
       code: coupon.code,
-      description: "",
-      expiryDate: coupon.expiryDate,
-      type: coupon.code ? "code" : "deal",
+      description: coupon.description,
+      expiryDays: coupon.expiryDays.toString(),
+      type: coupon.type,
+      savings: coupon.savings,
+      category: coupon.category,
+      featured: coupon.featured,
     })
     setIsAddCouponOpen(true)
   }
 
+  const handleEditGiftCard = (card: any) => {
+    setEditingItem(card)
+    setNewGiftCard({
+      name: card.name,
+      logo: card.logo,
+      description: card.description,
+      category: card.category,
+      denominations: card.denominations.join(", "),
+      minAmount: card.customAmount.min.toString(),
+      maxAmount: card.customAmount.max.toString(),
+      cashback: card.cashback,
+      featured: card.featured,
+    })
+    setIsAddGiftCardOpen(true)
+  }
+
   const resetBrandForm = () => {
-    setEditingBrand(null)
-    setNewBrand({ name: "", logo: "" })
+    setEditingItem(null)
+    setNewBrand({ name: "", logo: "", description: "", website: "" })
     setIsAddBrandOpen(false)
   }
 
   const resetCouponForm = () => {
-    setEditingCoupon(null)
-    setNewCoupon({ title: "", brand: "", code: "", description: "", expiryDate: "", type: "code" })
+    setEditingItem(null)
+    setNewCoupon({
+      title: "",
+      brand: "",
+      code: "",
+      description: "",
+      expiryDays: "",
+      type: "code",
+      savings: "",
+      category: "",
+      featured: false,
+    })
     setIsAddCouponOpen(false)
+  }
+
+  const resetGiftCardForm = () => {
+    setEditingItem(null)
+    setNewGiftCard({
+      name: "",
+      logo: "",
+      description: "",
+      category: "",
+      denominations: "",
+      minAmount: "",
+      maxAmount: "",
+      cashback: "",
+      featured: false,
+    })
+    setIsAddGiftCardOpen(false)
   }
 
   return (
@@ -197,6 +333,15 @@ export default function AdminDashboard() {
             >
               <Tag className="h-5 w-5 mr-3" />
               Coupons
+            </button>
+            <button
+              onClick={() => setActiveTab("giftcards")}
+              className={`w-full flex items-center px-4 py-2 text-left rounded-lg transition-colors ${
+                activeTab === "giftcards" ? "bg-orange-100 text-orange-700" : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              <Gift className="h-5 w-5 mr-3" />
+              Gift Cards
             </button>
             <Link
               href="/"
@@ -242,15 +387,15 @@ export default function AdminDashboard() {
           {activeTab === "overview" && (
             <div className="space-y-6">
               {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Total Brands</CardTitle>
                     <Package className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{dashboardStats.totalBrands}</div>
-                    <p className="text-xs text-muted-foreground">+2 from last month</p>
+                    <div className="text-2xl font-bold">{brands.length}</div>
+                    <p className="text-xs text-muted-foreground">Active partners</p>
                   </CardContent>
                 </Card>
                 <Card>
@@ -259,8 +404,18 @@ export default function AdminDashboard() {
                     <Tag className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{dashboardStats.totalCoupons}</div>
-                    <p className="text-xs text-muted-foreground">+12 from last week</p>
+                    <div className="text-2xl font-bold">{coupons.length}</div>
+                    <p className="text-xs text-muted-foreground">All coupons</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Gift Cards</CardTitle>
+                    <Gift className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{giftCards.length}</div>
+                    <p className="text-xs text-muted-foreground">Available cards</p>
                   </CardContent>
                 </Card>
                 <Card>
@@ -270,7 +425,7 @@ export default function AdminDashboard() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-green-600">{dashboardStats.activeCoupons}</div>
-                    <p className="text-xs text-muted-foreground">91% of total coupons</p>
+                    <p className="text-xs text-muted-foreground">Currently valid</p>
                   </CardContent>
                 </Card>
                 <Card>
@@ -280,7 +435,7 @@ export default function AdminDashboard() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-orange-600">{dashboardStats.expiringSoon}</div>
-                    <p className="text-xs text-muted-foreground">Next 7 days</p>
+                    <p className="text-xs text-muted-foreground">Next 3 days</p>
                   </CardContent>
                 </Card>
               </div>
@@ -294,7 +449,7 @@ export default function AdminDashboard() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {recentBrands.slice(0, 5).map((brand) => (
+                      {brands.slice(0, 5).map((brand) => (
                         <div key={brand.id} className="flex items-center justify-between">
                           <div className="flex items-center space-x-3">
                             <Image
@@ -306,7 +461,7 @@ export default function AdminDashboard() {
                             />
                             <div>
                               <p className="font-medium">{brand.name}</p>
-                              <p className="text-sm text-gray-500">{brand.coupons} coupons</p>
+                              <p className="text-sm text-gray-500">{brand.totalCoupons} coupons</p>
                             </div>
                           </div>
                           <Badge variant="secondary">Active</Badge>
@@ -323,14 +478,14 @@ export default function AdminDashboard() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {recentCoupons.slice(0, 5).map((coupon) => (
+                      {coupons.slice(0, 5).map((coupon) => (
                         <div key={coupon.id} className="flex items-center justify-between">
                           <div>
                             <p className="font-medium">{coupon.title}</p>
-                            <p className="text-sm text-gray-500">{coupon.brand}</p>
+                            <p className="text-sm text-gray-500">{coupon.store}</p>
                           </div>
-                          <Badge variant={coupon.status === "expiring" ? "destructive" : "secondary"}>
-                            {coupon.status}
+                          <Badge variant={coupon.expiryDays <= 3 ? "destructive" : "secondary"}>
+                            {coupon.expiryDays <= 3 ? "Expiring" : "Active"}
                           </Badge>
                         </div>
                       ))}
@@ -344,7 +499,7 @@ export default function AdminDashboard() {
           {activeTab === "brands" && (
             <div className="space-y-6">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Manage Brands</h3>
+                <h3 className="text-lg font-semibold">Manage Brands ({brands.length})</h3>
                 <Dialog open={isAddBrandOpen} onOpenChange={setIsAddBrandOpen}>
                   <DialogTrigger asChild>
                     <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600">
@@ -352,10 +507,12 @@ export default function AdminDashboard() {
                       Add Brand
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="max-w-md">
                     <DialogHeader>
-                      <DialogTitle>{editingBrand ? "Edit Brand" : "Add New Brand"}</DialogTitle>
-                      <DialogDescription>Add a new brand to the Fayeda Club platform</DialogDescription>
+                      <DialogTitle>{editingItem ? "Edit Brand" : "Add New Brand"}</DialogTitle>
+                      <DialogDescription>
+                        {editingItem ? "Update brand information" : "Add a new brand to the Fayeda Club platform"}
+                      </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleAddBrand} className="space-y-4">
                       <div>
@@ -368,28 +525,76 @@ export default function AdminDashboard() {
                           required
                         />
                       </div>
+
                       <div>
-                        <Label htmlFor="brandLogo">Logo URL</Label>
-                        <Input
-                          id="brandLogo"
-                          value={newBrand.logo}
-                          onChange={(e) => setNewBrand({ ...newBrand, logo: e.target.value })}
-                          placeholder="Enter logo URL"
+                        <Label htmlFor="brandDescription">Description</Label>
+                        <Textarea
+                          id="brandDescription"
+                          value={newBrand.description}
+                          onChange={(e) => setNewBrand({ ...newBrand, description: e.target.value })}
+                          placeholder="Enter brand description"
                           required
                         />
                       </div>
+
+                      <div>
+                        <Label htmlFor="brandWebsite">Website URL</Label>
+                        <Input
+                          id="brandWebsite"
+                          value={newBrand.website}
+                          onChange={(e) => setNewBrand({ ...newBrand, website: e.target.value })}
+                          placeholder="https://example.com"
+                          type="url"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="brandLogo">Logo (64x64px)</Label>
+                        <div className="flex items-center space-x-4">
+                          {newBrand.logo && (
+                            <div className="relative">
+                              <Image
+                                src={newBrand.logo || "/placeholder.svg"}
+                                alt="Logo preview"
+                                width={64}
+                                height={64}
+                                className="rounded border"
+                              />
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                className="absolute -top-2 -right-2 h-6 w-6 p-0"
+                                onClick={() => setNewBrand({ ...newBrand, logo: "" })}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          )}
+                          <div>
+                            <Input
+                              id="brandLogo"
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0]
+                                if (file) handleImageUpload(file, "brand")
+                              }}
+                              disabled={uploadingImage}
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                              Image will be automatically cropped to 64x64px (1:1 ratio)
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
                       <div className="flex space-x-2">
-                        <Button type="submit" className="flex-1">
-                          {editingBrand ? "Update Brand" : "Add Brand"}
+                        <Button type="submit" className="flex-1" disabled={uploadingImage}>
+                          {uploadingImage ? "Processing..." : editingItem ? "Update Brand" : "Add Brand"}
                         </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => {
-                            setIsAddBrandOpen(false)
-                            resetBrandForm()
-                          }}
-                        >
+                        <Button type="button" variant="outline" onClick={resetBrandForm}>
                           Cancel
                         </Button>
                       </div>
@@ -404,51 +609,73 @@ export default function AdminDashboard() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Brand</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead>Website</TableHead>
                         <TableHead>Coupons</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {brands.map((brand) => (
-                        <TableRow key={brand.id}>
-                          <TableCell>
-                            <div className="flex items-center space-x-3">
-                              <Image
-                                src={brand.logo || "/placeholder.svg"}
-                                alt={brand.name}
-                                width={40}
-                                height={40}
-                                className="rounded"
-                              />
-                              <span className="font-medium">{brand.name}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>{brand.coupons}</TableCell>
-                          <TableCell>
-                            <Badge variant="secondary">Active</Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="sm">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleEditBrand(brand)}>
-                                  <Edit className="h-4 w-4 mr-2" />
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="text-red-600" onClick={() => handleDeleteBrand(brand.id)}>
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {brands
+                        .filter(
+                          (brand) =>
+                            brand.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            brand.description.toLowerCase().includes(searchQuery.toLowerCase()),
+                        )
+                        .map((brand) => (
+                          <TableRow key={brand.id}>
+                            <TableCell>
+                              <div className="flex items-center space-x-3">
+                                <Image
+                                  src={brand.logo || "/placeholder.svg"}
+                                  alt={brand.name}
+                                  width={40}
+                                  height={40}
+                                  className="rounded"
+                                />
+                                <span className="font-medium">{brand.name}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="max-w-xs truncate">{brand.description}</TableCell>
+                            <TableCell>
+                              <a
+                                href={brand.website}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:underline"
+                              >
+                                {brand.website}
+                              </a>
+                            </TableCell>
+                            <TableCell>{brand.totalCoupons}</TableCell>
+                            <TableCell>
+                              <Badge variant="secondary">Active</Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => handleEditBrand(brand)}>
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    className="text-red-600"
+                                    onClick={() => handleDeleteBrand(brand.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+                        ))}
                     </TableBody>
                   </Table>
                 </CardContent>
@@ -459,7 +686,7 @@ export default function AdminDashboard() {
           {activeTab === "coupons" && (
             <div className="space-y-6">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Manage Coupons</h3>
+                <h3 className="text-lg font-semibold">Manage Coupons ({coupons.length})</h3>
                 <Dialog open={isAddCouponOpen} onOpenChange={setIsAddCouponOpen}>
                   <DialogTrigger asChild>
                     <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600">
@@ -467,10 +694,12 @@ export default function AdminDashboard() {
                       Add Coupon
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-md">
+                  <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
                     <DialogHeader>
-                      <DialogTitle>{editingCoupon ? "Edit Coupon" : "Add New Coupon"}</DialogTitle>
-                      <DialogDescription>Add a new coupon to the selected brand</DialogDescription>
+                      <DialogTitle>{editingItem ? "Edit Coupon" : "Add New Coupon"}</DialogTitle>
+                      <DialogDescription>
+                        {editingItem ? "Update coupon information" : "Add a new coupon to the selected brand"}
+                      </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleAddCoupon} className="space-y-4">
                       <div>
@@ -483,6 +712,7 @@ export default function AdminDashboard() {
                           required
                         />
                       </div>
+
                       <div>
                         <Label htmlFor="couponBrand">Brand</Label>
                         <Select
@@ -501,6 +731,7 @@ export default function AdminDashboard() {
                           </SelectContent>
                         </Select>
                       </div>
+
                       <div>
                         <Label htmlFor="couponCode">Coupon Code</Label>
                         <Input
@@ -510,6 +741,7 @@ export default function AdminDashboard() {
                           placeholder="Enter coupon code (leave empty for deals)"
                         />
                       </div>
+
                       <div>
                         <Label htmlFor="couponDescription">Description</Label>
                         <Textarea
@@ -520,16 +752,53 @@ export default function AdminDashboard() {
                           required
                         />
                       </div>
+
                       <div>
-                        <Label htmlFor="couponExpiry">Expiry Date</Label>
+                        <Label htmlFor="couponSavings">Savings</Label>
                         <Input
-                          id="couponExpiry"
-                          type="date"
-                          value={newCoupon.expiryDate}
-                          onChange={(e) => setNewCoupon({ ...newCoupon, expiryDate: e.target.value })}
+                          id="couponSavings"
+                          value={newCoupon.savings}
+                          onChange={(e) => setNewCoupon({ ...newCoupon, savings: e.target.value })}
+                          placeholder="e.g., Up to ₹1,000"
                           required
                         />
                       </div>
+
+                      <div>
+                        <Label htmlFor="couponCategory">Category</Label>
+                        <Select
+                          value={newCoupon.category}
+                          onValueChange={(value) => setNewCoupon({ ...newCoupon, category: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Electronics">Electronics</SelectItem>
+                            <SelectItem value="Fashion">Fashion</SelectItem>
+                            <SelectItem value="Food & Dining">Food & Dining</SelectItem>
+                            <SelectItem value="Travel">Travel</SelectItem>
+                            <SelectItem value="Health & Beauty">Health & Beauty</SelectItem>
+                            <SelectItem value="Home & Garden">Home & Garden</SelectItem>
+                            <SelectItem value="Entertainment">Entertainment</SelectItem>
+                            <SelectItem value="All">All Categories</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="couponExpiry">Expiry (Days from now)</Label>
+                        <Input
+                          id="couponExpiry"
+                          type="number"
+                          value={newCoupon.expiryDays}
+                          onChange={(e) => setNewCoupon({ ...newCoupon, expiryDays: e.target.value })}
+                          placeholder="30"
+                          min="1"
+                          required
+                        />
+                      </div>
+
                       <div>
                         <Label htmlFor="couponType">Type</Label>
                         <Select
@@ -545,18 +814,23 @@ export default function AdminDashboard() {
                           </SelectContent>
                         </Select>
                       </div>
+
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="couponFeatured"
+                          checked={newCoupon.featured}
+                          onChange={(e) => setNewCoupon({ ...newCoupon, featured: e.target.checked })}
+                          className="rounded"
+                        />
+                        <Label htmlFor="couponFeatured">Featured Coupon</Label>
+                      </div>
+
                       <div className="flex space-x-2">
                         <Button type="submit" className="flex-1">
-                          {editingCoupon ? "Update Coupon" : "Add Coupon"}
+                          {editingItem ? "Update Coupon" : "Add Coupon"}
                         </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => {
-                            setIsAddCouponOpen(false)
-                            resetCouponForm()
-                          }}
-                        >
+                        <Button type="button" variant="outline" onClick={resetCouponForm}>
                           Cancel
                         </Button>
                       </div>
@@ -573,53 +847,332 @@ export default function AdminDashboard() {
                         <TableHead>Title</TableHead>
                         <TableHead>Brand</TableHead>
                         <TableHead>Code</TableHead>
+                        <TableHead>Savings</TableHead>
+                        <TableHead>Category</TableHead>
                         <TableHead>Expiry</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {coupons.map((coupon) => (
-                        <TableRow key={coupon.id}>
-                          <TableCell className="font-medium">{coupon.title}</TableCell>
-                          <TableCell>{coupon.brand}</TableCell>
-                          <TableCell>
-                            {coupon.code ? (
-                              <code className="bg-gray-100 px-2 py-1 rounded text-sm">{coupon.code}</code>
-                            ) : (
-                              <span className="text-gray-500">No code</span>
-                            )}
-                          </TableCell>
-                          <TableCell>{coupon.expiryDate}</TableCell>
-                          <TableCell>
-                            <Badge variant={coupon.status === "expiring" ? "destructive" : "secondary"}>
-                              {coupon.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="sm">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleEditCoupon(coupon)}>
-                                  <Edit className="h-4 w-4 mr-2" />
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  className="text-red-600"
-                                  onClick={() => handleDeleteCoupon(coupon.id)}
-                                >
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {coupons
+                        .filter(
+                          (coupon) =>
+                            coupon.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            coupon.store.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            coupon.category.toLowerCase().includes(searchQuery.toLowerCase()),
+                        )
+                        .map((coupon) => (
+                          <TableRow key={coupon.id}>
+                            <TableCell className="font-medium max-w-xs">
+                              <div>
+                                <div className="truncate">{coupon.title}</div>
+                                {coupon.featured && (
+                                  <Badge variant="secondary" className="mt-1 text-xs">
+                                    Featured
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>{coupon.store}</TableCell>
+                            <TableCell>
+                              {coupon.code ? (
+                                <code className="bg-gray-100 px-2 py-1 rounded text-sm">{coupon.code}</code>
+                              ) : (
+                                <span className="text-gray-500">No code</span>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-green-600 font-medium">{coupon.savings}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline">{coupon.category}</Badge>
+                            </TableCell>
+                            <TableCell>{coupon.expiryDays}d</TableCell>
+                            <TableCell>
+                              <Badge variant={coupon.expiryDays <= 3 ? "destructive" : "secondary"}>
+                                {coupon.expiryDays <= 3 ? "Expiring" : "Active"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => handleEditCoupon(coupon)}>
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    className="text-red-600"
+                                    onClick={() => handleDeleteCoupon(coupon.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {activeTab === "giftcards" && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">Manage Gift Cards ({giftCards.length})</h3>
+                <Dialog open={isAddGiftCardOpen} onOpenChange={setIsAddGiftCardOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Gift Card
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>{editingItem ? "Edit Gift Card" : "Add New Gift Card"}</DialogTitle>
+                      <DialogDescription>
+                        {editingItem ? "Update gift card information" : "Add a new gift card to the platform"}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleAddGiftCard} className="space-y-4">
+                      <div>
+                        <Label htmlFor="giftCardName">Gift Card Name</Label>
+                        <Input
+                          id="giftCardName"
+                          value={newGiftCard.name}
+                          onChange={(e) => setNewGiftCard({ ...newGiftCard, name: e.target.value })}
+                          placeholder="Enter gift card name"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="giftCardDescription">Description</Label>
+                        <Textarea
+                          id="giftCardDescription"
+                          value={newGiftCard.description}
+                          onChange={(e) => setNewGiftCard({ ...newGiftCard, description: e.target.value })}
+                          placeholder="Enter gift card description"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="giftCardCategory">Category</Label>
+                        <Select
+                          value={newGiftCard.category}
+                          onValueChange={(value) => setNewGiftCard({ ...newGiftCard, category: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Shopping">Shopping</SelectItem>
+                            <SelectItem value="Fashion">Fashion</SelectItem>
+                            <SelectItem value="Food & Dining">Food & Dining</SelectItem>
+                            <SelectItem value="Travel">Travel</SelectItem>
+                            <SelectItem value="Beauty">Beauty</SelectItem>
+                            <SelectItem value="Entertainment">Entertainment</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="giftCardDenominations">Denominations (comma-separated)</Label>
+                        <Input
+                          id="giftCardDenominations"
+                          value={newGiftCard.denominations}
+                          onChange={(e) => setNewGiftCard({ ...newGiftCard, denominations: e.target.value })}
+                          placeholder="100, 250, 500, 1000, 2000"
+                          required
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="giftCardMinAmount">Min Amount</Label>
+                          <Input
+                            id="giftCardMinAmount"
+                            type="number"
+                            value={newGiftCard.minAmount}
+                            onChange={(e) => setNewGiftCard({ ...newGiftCard, minAmount: e.target.value })}
+                            placeholder="50"
+                            min="1"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="giftCardMaxAmount">Max Amount</Label>
+                          <Input
+                            id="giftCardMaxAmount"
+                            type="number"
+                            value={newGiftCard.maxAmount}
+                            onChange={(e) => setNewGiftCard({ ...newGiftCard, maxAmount: e.target.value })}
+                            placeholder="10000"
+                            min="1"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="giftCardCashback">Cashback (%)</Label>
+                        <Input
+                          id="giftCardCashback"
+                          value={newGiftCard.cashback}
+                          onChange={(e) => setNewGiftCard({ ...newGiftCard, cashback: e.target.value })}
+                          placeholder="2%"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="giftCardLogo">Logo (64x64px)</Label>
+                        <div className="flex items-center space-x-4">
+                          {newGiftCard.logo && (
+                            <div className="relative">
+                              <Image
+                                src={newGiftCard.logo || "/placeholder.svg"}
+                                alt="Logo preview"
+                                width={64}
+                                height={64}
+                                className="rounded border"
+                              />
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                className="absolute -top-2 -right-2 h-6 w-6 p-0"
+                                onClick={() => setNewGiftCard({ ...newGiftCard, logo: "" })}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          )}
+                          <div>
+                            <Input
+                              id="giftCardLogo"
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0]
+                                if (file) handleImageUpload(file, "giftcard")
+                              }}
+                              disabled={uploadingImage}
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                              Image will be automatically cropped to 64x64px (1:1 ratio)
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="giftCardFeatured"
+                          checked={newGiftCard.featured}
+                          onChange={(e) => setNewGiftCard({ ...newGiftCard, featured: e.target.checked })}
+                          className="rounded"
+                        />
+                        <Label htmlFor="giftCardFeatured">Featured Gift Card</Label>
+                      </div>
+
+                      <div className="flex space-x-2">
+                        <Button type="submit" className="flex-1" disabled={uploadingImage}>
+                          {uploadingImage ? "Processing..." : editingItem ? "Update Gift Card" : "Add Gift Card"}
+                        </Button>
+                        <Button type="button" variant="outline" onClick={resetGiftCardForm}>
+                          Cancel
+                        </Button>
+                      </div>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              <Card>
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Gift Card</TableHead>
+                        <TableHead>Category</TableHead>
+                        <TableHead>Amount Range</TableHead>
+                        <TableHead>Cashback</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {giftCards
+                        .filter(
+                          (card) =>
+                            card.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            card.category.toLowerCase().includes(searchQuery.toLowerCase()),
+                        )
+                        .map((card) => (
+                          <TableRow key={card.id}>
+                            <TableCell>
+                              <div className="flex items-center space-x-3">
+                                <Image
+                                  src={card.logo || "/placeholder.svg"}
+                                  alt={card.name}
+                                  width={40}
+                                  height={40}
+                                  className="rounded"
+                                />
+                                <div>
+                                  <div className="font-medium">{card.name}</div>
+                                  {card.featured && (
+                                    <Badge variant="secondary" className="mt-1 text-xs">
+                                      Featured
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline">{card.category}</Badge>
+                            </TableCell>
+                            <TableCell>
+                              ₹{card.customAmount.min} - ₹{card.customAmount.max.toLocaleString()}
+                            </TableCell>
+                            <TableCell className="text-green-600 font-medium">{card.cashback}</TableCell>
+                            <TableCell>
+                              <Badge variant="secondary">Active</Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => handleEditGiftCard(card)}>
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    className="text-red-600"
+                                    onClick={() => handleDeleteGiftCard(card.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+                        ))}
                     </TableBody>
                   </Table>
                 </CardContent>

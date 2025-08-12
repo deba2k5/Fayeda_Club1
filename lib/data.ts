@@ -2,431 +2,316 @@ export interface Store {
   id: string
   name: string
   logo: string
-  description: string
   category: string
-  website: string
-  totalCoupons: number
-  rating: number
-  featured: boolean
+  description: string
+  maxCashback: number
   coupons: Coupon[]
+  featured: boolean
+  rating: number
+  totalOffers: number
 }
 
 export interface Coupon {
   id: string
-  store: string
-  storeLogo: string
   title: string
   description: string
   code: string
-  type: "code" | "deal"
   discount: string
-  savings: string
+  validTill: string
+  terms: string[]
   category: string
   featured: boolean
-  verified: boolean
-  expiryDate: string
-  expiryDays: number
-  usedCount: number
-  storeRating: number
-  terms: string[]
+  used: number
 }
 
 export interface GiftCard {
   id: string
-  name: string
+  brand: string
   logo: string
   description: string
-  category: string
-  discount: string
-  cashback: string
-  color: string
-  featured: boolean
-  rating: number
-  customAmount: {
-    min: number
-    max: number
-  }
-  fixedAmounts: number[]
+  denominations: number[]
+  cashback: number
+  validity: string
   terms: string[]
+  featured: boolean
+  category: string
 }
 
 export interface Category {
   name: string
-  icon: string
-  color: string
-  items: {
-    name: string
-    image: string
-    deals: number
-  }[]
+  image: string
+  itemCount: number
+  subcategories: string[]
 }
 
-export interface TopDeal {
-  coupons: Coupon[]
-  giftCards: GiftCard[]
-}
-
-// Stores Data
-export const storesData: Record<string, Store> = {
-  amazon: {
-    id: "amazon",
+export const stores: Store[] = [
+  {
+    id: "1",
     name: "Amazon",
     logo: "/amazon-logo.png",
-    description: "World's largest online marketplace with everything you need",
     category: "E-commerce",
-    website: "https://amazon.in",
-    totalCoupons: 45,
-    rating: 4.8,
+    description: "World's largest online marketplace with everything you need",
+    maxCashback: 15,
     featured: true,
+    rating: 4.8,
+    totalOffers: 45,
     coupons: [
       {
-        id: "amazon-1",
-        store: "Amazon",
-        storeLogo: "/amazon-logo.png",
-        title: "Extra 20% Off on Electronics",
-        description: "Get additional 20% discount on laptops, smartphones, and accessories",
-        code: "TECH20",
-        type: "code",
-        discount: "20%",
-        savings: "₹5,000",
+        id: "amz1",
+        title: "Extra 20% off on Electronics",
+        description: "Get additional 20% discount on all electronics items",
+        code: "ELECTRONICS20",
+        discount: "20% OFF",
+        validTill: "Dec 31, 2024",
+        terms: ["Valid on electronics only", "Minimum order ₹5000", "One time use per user"],
         category: "Electronics",
         featured: true,
-        verified: true,
-        expiryDate: "2025-01-31",
-        expiryDays: 15,
-        usedCount: 1250,
-        storeRating: 4.8,
-        terms: ["Valid on electronics only", "Minimum order ₹10,000", "Not valid with other offers"],
+        used: 1250,
       },
       {
-        id: "amazon-2",
-        store: "Amazon",
-        storeLogo: "/amazon-logo.png",
-        title: "Free Delivery on All Orders",
-        description: "No minimum order value required for free shipping",
-        code: "",
-        type: "deal",
-        discount: "Free Shipping",
-        savings: "₹200",
-        category: "Shipping",
-        featured: false,
-        verified: true,
-        expiryDate: "2025-02-28",
-        expiryDays: 45,
-        usedCount: 3500,
-        storeRating: 4.8,
-        terms: ["Valid for all products", "No minimum order value"],
-      },
-    ],
-  },
-  flipkart: {
-    id: "flipkart",
-    name: "Flipkart",
-    logo: "/flipkart-logo.png",
-    description: "India's leading e-commerce platform for all your shopping needs",
-    category: "E-commerce",
-    website: "https://flipkart.com",
-    totalCoupons: 38,
-    rating: 4.6,
-    featured: true,
-    coupons: [
-      {
-        id: "flipkart-1",
-        store: "Flipkart",
-        storeLogo: "/flipkart-logo.png",
-        title: "Big Billion Days Sale",
-        description: "Mega discounts across all categories during the biggest sale",
-        code: "BIGBILLION",
-        type: "code",
-        discount: "Up to 80%",
-        savings: "₹15,000",
+        id: "amz2",
+        title: "Fashion Sale - Up to 70% Off",
+        description: "Huge discounts on fashion and lifestyle products",
+        code: "FASHION70",
+        discount: "70% OFF",
+        validTill: "Dec 25, 2024",
+        terms: ["Valid on fashion items", "No minimum order", "Limited time offer"],
         category: "Fashion",
         featured: true,
-        verified: true,
-        expiryDate: "2025-01-25",
-        expiryDays: 10,
-        usedCount: 2800,
-        storeRating: 4.6,
-        terms: ["Valid on all categories", "Maximum discount ₹15,000", "Limited time offer"],
+        used: 890,
       },
     ],
   },
-  myntra: {
-    id: "myntra",
+  {
+    id: "2",
+    name: "Flipkart",
+    logo: "/flipkart-logo.png",
+    category: "E-commerce",
+    description: "India's leading e-commerce platform for all your needs",
+    maxCashback: 12,
+    featured: true,
+    rating: 4.6,
+    totalOffers: 38,
+    coupons: [
+      {
+        id: "fk1",
+        title: "Big Billion Days - Extra 25% Off",
+        description: "Special discount during Big Billion Days sale",
+        code: "BBD25",
+        discount: "25% OFF",
+        validTill: "Dec 30, 2024",
+        terms: ["Valid on all categories", "Minimum order ₹2000", "Maximum discount ₹5000"],
+        category: "General",
+        featured: true,
+        used: 2100,
+      },
+    ],
+  },
+  {
+    id: "3",
     name: "Myntra",
     logo: "/myntra-logo.png",
-    description: "India's largest fashion destination with latest trends",
     category: "Fashion",
-    website: "https://myntra.com",
-    totalCoupons: 32,
-    rating: 4.5,
+    description: "India's largest fashion destination",
+    maxCashback: 18,
     featured: true,
+    rating: 4.5,
+    totalOffers: 52,
     coupons: [
       {
-        id: "myntra-1",
-        store: "Myntra",
-        storeLogo: "/myntra-logo.png",
-        title: "Fashion Sale - Extra 40% Off",
-        description: "Additional discount on already discounted fashion items",
-        code: "FASHION40",
-        type: "code",
-        discount: "40%",
-        savings: "₹3,000",
+        id: "myn1",
+        title: "End of Season Sale - 80% Off",
+        description: "Massive discounts on end of season fashion items",
+        code: "EOSS80",
+        discount: "80% OFF",
+        validTill: "Dec 28, 2024",
+        terms: ["Valid on selected items", "No minimum order", "While stocks last"],
         category: "Fashion",
         featured: true,
-        verified: true,
-        expiryDate: "2025-01-30",
-        expiryDays: 14,
-        usedCount: 1800,
-        storeRating: 4.5,
-        terms: ["Valid on fashion items only", "Minimum purchase ₹2,999", "Cannot be combined with other offers"],
+        used: 1560,
       },
     ],
   },
-  nykaa: {
-    id: "nykaa",
+  {
+    id: "4",
     name: "Nykaa",
     logo: "/nykaa-logo.png",
-    description: "Beauty and wellness products from top brands",
     category: "Beauty",
-    website: "https://nykaa.com",
-    totalCoupons: 28,
-    rating: 4.4,
-    featured: true,
-    coupons: [
-      {
-        id: "nykaa-1",
-        store: "Nykaa",
-        storeLogo: "/nykaa-logo.png",
-        title: "Beauty Bonanza - 30% Off",
-        description: "Flat 30% off on all beauty and skincare products",
-        code: "BEAUTY30",
-        type: "code",
-        discount: "30%",
-        savings: "₹1,500",
-        category: "Beauty",
-        featured: true,
-        verified: true,
-        expiryDate: "2025-02-15",
-        expiryDays: 30,
-        usedCount: 950,
-        storeRating: 4.4,
-        terms: ["Valid on beauty products", "Minimum order ₹1,999", "Free shipping included"],
-      },
-    ],
-  },
-  ajio: {
-    id: "ajio",
-    name: "Ajio",
-    logo: "/ajio-logo.png",
-    description: "Trendy fashion and lifestyle products",
-    category: "Fashion",
-    website: "https://ajio.com",
-    totalCoupons: 25,
-    rating: 4.3,
-    featured: false,
-    coupons: [
-      {
-        id: "ajio-1",
-        store: "Ajio",
-        storeLogo: "/ajio-logo.png",
-        title: "Style Sale - 50% Off",
-        description: "Huge discounts on trending fashion and accessories",
-        code: "STYLE50",
-        type: "code",
-        discount: "50%",
-        savings: "₹2,500",
-        category: "Fashion",
-        featured: false,
-        verified: true,
-        expiryDate: "2025-01-28",
-        expiryDays: 12,
-        usedCount: 720,
-        storeRating: 4.3,
-        terms: ["Valid on fashion items", "Minimum purchase ₹1,999", "Limited time offer"],
-      },
-    ],
-  },
-}
-
-// Gift Cards Data
-export const giftCardsData: GiftCard[] = [
-  {
-    id: "amazon-gift",
-    name: "Amazon",
-    logo: "/amazon-logo.png",
-    description: "Perfect for any occasion - shop everything on Amazon",
-    category: "E-commerce",
-    discount: "Up to 5% Off",
-    cashback: "2% Cashback",
-    color: "from-orange-400 to-yellow-500",
-    featured: true,
-    rating: 4.9,
-    customAmount: { min: 100, max: 50000 },
-    fixedAmounts: [500, 1000, 2000, 5000, 10000],
-    terms: ["Valid for 1 year", "No expiry on balance", "Can be used for all products"],
-  },
-  {
-    id: "flipkart-gift",
-    name: "Flipkart",
-    logo: "/flipkart-logo.png",
-    description: "India's favorite shopping destination gift card",
-    category: "E-commerce",
-    discount: "Up to 3% Off",
-    cashback: "1.5% Cashback",
-    color: "from-blue-500 to-indigo-600",
+    description: "Your beauty shopping destination",
+    maxCashback: 20,
     featured: true,
     rating: 4.7,
-    customAmount: { min: 100, max: 25000 },
-    fixedAmounts: [500, 1000, 2000, 5000],
-    terms: ["Valid for 1 year", "Applicable on all products", "Cannot be transferred"],
+    totalOffers: 29,
+    coupons: [
+      {
+        id: "nyk1",
+        title: "Beauty Bonanza - 50% Off",
+        description: "Half price on premium beauty products",
+        code: "BEAUTY50",
+        discount: "50% OFF",
+        validTill: "Dec 26, 2024",
+        terms: ["Valid on beauty products", "Minimum order ₹1500", "Free shipping included"],
+        category: "Beauty",
+        featured: true,
+        used: 780,
+      },
+    ],
   },
   {
-    id: "myntra-gift",
-    name: "Myntra",
-    logo: "/myntra-logo.png",
-    description: "Fashion lover's paradise - latest trends and styles",
+    id: "5",
+    name: "Ajio",
+    logo: "/ajio-logo.png",
     category: "Fashion",
-    discount: "Up to 4% Off",
-    cashback: "2.5% Cashback",
-    color: "from-pink-500 to-rose-600",
-    featured: true,
-    rating: 4.6,
-    customAmount: { min: 500, max: 20000 },
-    fixedAmounts: [1000, 2000, 3000, 5000],
-    terms: ["Valid for 1 year", "Fashion and lifestyle only", "Free shipping on gift card orders"],
-  },
-  {
-    id: "nykaa-gift",
-    name: "Nykaa",
-    logo: "/nykaa-logo.png",
-    description: "Beauty and wellness products for the perfect you",
-    category: "Beauty",
-    discount: "Up to 6% Off",
-    cashback: "3% Cashback",
-    color: "from-purple-500 to-pink-600",
-    featured: true,
-    rating: 4.5,
-    customAmount: { min: 500, max: 15000 },
-    fixedAmounts: [1000, 2000, 3000, 5000],
-    terms: ["Valid for 1 year", "Beauty products only", "Includes premium brands"],
-  },
-  {
-    id: "paytm-gift",
-    name: "Paytm",
-    logo: "/paytm-payment-logo.png",
-    description: "Digital wallet for payments, recharges, and shopping",
-    category: "Digital Wallet",
-    discount: "Up to 2% Off",
-    cashback: "1% Cashback",
-    color: "from-blue-600 to-cyan-500",
+    description: "Trendy fashion and lifestyle products",
+    maxCashback: 15,
     featured: false,
-    rating: 4.4,
-    customAmount: { min: 100, max: 10000 },
-    fixedAmounts: [500, 1000, 2000, 5000],
-    terms: ["Instant delivery", "Valid for all Paytm services", "No expiry"],
+    rating: 4.3,
+    totalOffers: 31,
+    coupons: [
+      {
+        id: "ajio1",
+        title: "Trendy Tuesday - 40% Off",
+        description: "Special Tuesday deals on trendy fashion",
+        code: "TRENDY40",
+        discount: "40% OFF",
+        validTill: "Every Tuesday",
+        terms: ["Valid on Tuesdays only", "Minimum order ₹2500", "On selected brands"],
+        category: "Fashion",
+        featured: false,
+        used: 450,
+      },
+    ],
   },
 ]
 
-// Categories Data
-export const categoriesData: Record<string, Category> = {
-  electronics: {
+export const giftCards: GiftCard[] = [
+  {
+    id: "gc1",
+    brand: "Amazon",
+    logo: "/amazon-logo.png",
+    description: "Shop for everything on Amazon with gift cards",
+    denominations: [100, 500, 1000, 2000, 5000],
+    cashback: 5,
+    validity: "1 Year",
+    terms: ["Valid on Amazon.in only", "Cannot be used for other gift cards", "Non-refundable"],
+    featured: true,
+    category: "E-commerce",
+  },
+  {
+    id: "gc2",
+    brand: "Flipkart",
+    logo: "/flipkart-logo.png",
+    description: "Perfect for all your shopping needs on Flipkart",
+    denominations: [200, 500, 1000, 3000, 5000],
+    cashback: 4,
+    validity: "1 Year",
+    terms: ["Valid on Flipkart.com only", "Cannot be clubbed with other offers", "Non-transferable"],
+    featured: true,
+    category: "E-commerce",
+  },
+  {
+    id: "gc3",
+    brand: "Myntra",
+    logo: "/myntra-logo.png",
+    description: "Fashion gift cards for style enthusiasts",
+    denominations: [500, 1000, 2000, 3000],
+    cashback: 6,
+    validity: "1 Year",
+    terms: ["Valid on Myntra.com only", "Valid on fashion items only", "Check balance online"],
+    featured: true,
+    category: "Fashion",
+  },
+  {
+    id: "gc4",
+    brand: "Nykaa",
+    logo: "/nykaa-logo.png",
+    description: "Beauty and wellness gift cards",
+    denominations: [300, 500, 1000, 2000],
+    cashback: 8,
+    validity: "1 Year",
+    terms: ["Valid on Nykaa.com only", "Valid on beauty products", "Cannot be redeemed for cash"],
+    featured: true,
+    category: "Beauty",
+  },
+]
+
+export const categories: Category[] = [
+  {
     name: "Electronics",
-    icon: "📱",
-    color: "from-blue-500 to-cyan-600",
-    items: [
-      { name: "Smartphones", image: "/electronics/smartphones.png", deals: 45 },
-      { name: "Laptops", image: "/electronics/laptops.png", deals: 32 },
-      { name: "Headphones", image: "/electronics/headphones.png", deals: 28 },
-      { name: "Smartwatches", image: "/electronics/smartwatches.png", deals: 22 },
-      { name: "Tablets", image: "/electronics/tablets.png", deals: 18 },
-      { name: "Gaming", image: "/electronics/gaming.png", deals: 35 },
-    ],
+    image: "/electronics/smartphones.png",
+    itemCount: 156,
+    subcategories: ["Smartphones", "Laptops", "Headphones", "Gaming", "Smartwatches", "Tablets"],
   },
-  fashion: {
+  {
     name: "Fashion",
-    icon: "👗",
-    color: "from-pink-500 to-rose-600",
-    items: [
-      { name: "Women's Clothing", image: "/fashion/womens-clothing.png", deals: 65 },
-      { name: "Men's Clothing", image: "/fashion/mens-clothing.png", deals: 48 },
-      { name: "Footwear", image: "/fashion/footwear.png", deals: 42 },
-      { name: "Accessories", image: "/fashion/accessories.png", deals: 38 },
-      { name: "Ethnic Wear", image: "/fashion/ethnic-wear.png", deals: 35 },
-      { name: "Kids Fashion", image: "/fashion/kids-fashion.png", deals: 28 },
-    ],
+    image: "/fashion/womens-clothing.png",
+    itemCount: 234,
+    subcategories: ["Mens Clothing", "Womens Clothing", "Footwear", "Accessories", "Ethnic Wear", "Kids Fashion"],
   },
-  beauty: {
+  {
     name: "Beauty",
-    icon: "💄",
-    color: "from-purple-500 to-pink-600",
-    items: [
-      { name: "Skincare", image: "/beauty/skincare.png", deals: 38 },
-      { name: "Makeup", image: "/beauty/makeup.png", deals: 42 },
-      { name: "Haircare", image: "/beauty/haircare.png", deals: 25 },
-      { name: "Fragrances", image: "/beauty/fragrances.png", deals: 22 },
-      { name: "Personal Care", image: "/beauty/personal-care.png", deals: 35 },
-      { name: "Supplements", image: "/beauty/supplements.png", deals: 18 },
-    ],
+    image: "/beauty/skincare.png",
+    itemCount: 89,
+    subcategories: ["Skincare", "Makeup", "Haircare", "Fragrances", "Personal Care", "Supplements"],
   },
-  home: {
+  {
     name: "Home & Living",
-    icon: "🏠",
-    color: "from-green-500 to-teal-600",
-    items: [
-      { name: "Furniture", image: "/home/furniture.png", deals: 28 },
-      { name: "Home Decor", image: "/home/home-decor.png", deals: 35 },
-      { name: "Kitchen & Dining", image: "/home/kitchen-dining.png", deals: 32 },
-      { name: "Bedding & Bath", image: "/home/bedding-bath.png", deals: 25 },
-      { name: "Storage & Organization", image: "/home/storage-organization.png", deals: 22 },
-      { name: "Garden & Outdoor", image: "/home/garden-outdoor.png", deals: 18 },
+    image: "/home/furniture.png",
+    itemCount: 167,
+    subcategories: [
+      "Furniture",
+      "Home Decor",
+      "Kitchen & Dining",
+      "Bedding & Bath",
+      "Storage & Organization",
+      "Garden & Outdoor",
     ],
   },
-  food: {
+  {
     name: "Food & Dining",
-    icon: "🍕",
-    color: "from-orange-500 to-red-600",
-    items: [
-      { name: "Pizza & Fast Food", image: "/food/pizza-fastfood.png", deals: 45 },
-      { name: "Indian Cuisine", image: "/food/indian-cuisine.png", deals: 38 },
-      { name: "Chinese & Asian", image: "/food/chinese-asian.png", deals: 32 },
-      { name: "Healthy Food", image: "/food/healthy-food.png", deals: 28 },
-      { name: "Desserts & Sweets", image: "/food/desserts-sweets.png", deals: 25 },
-      { name: "Beverages", image: "/food/beverages.png", deals: 22 },
+    image: "/food/indian-cuisine.png",
+    itemCount: 78,
+    subcategories: [
+      "Indian Cuisine",
+      "Chinese & Asian",
+      "Pizza & Fast Food",
+      "Desserts & Sweets",
+      "Healthy Food",
+      "Beverages",
     ],
   },
-  travel: {
+  {
     name: "Travel",
-    icon: "✈️",
-    color: "from-indigo-500 to-purple-600",
-    items: [
-      { name: "Flights", image: "/travel/flights.png", deals: 35 },
-      { name: "Hotels", image: "/travel/hotels.png", deals: 42 },
-      { name: "Holiday Packages", image: "/travel/holiday-packages.png", deals: 28 },
-      { name: "Bus Bookings", image: "/travel/bus-bookings.png", deals: 25 },
-      { name: "Train Bookings", image: "/travel/train-bookings.png", deals: 22 },
-      { name: "Car Rentals", image: "/travel/car-rentals.png", deals: 18 },
-    ],
+    image: "/travel/flights.png",
+    itemCount: 45,
+    subcategories: ["Flights", "Hotels", "Holiday Packages", "Bus Bookings", "Train Bookings", "Car Rentals"],
   },
-}
+]
 
-// Helper Functions
-export function getAllCoupons(): Coupon[] {
-  const allCoupons: Coupon[] = []
-  Object.values(storesData).forEach((store) => {
-    allCoupons.push(...store.coupons)
-  })
-  return allCoupons
-}
+// Helper functions
+export function getTopDeals() {
+  const featuredCoupons = stores
+    .flatMap((store) => store.coupons)
+    .filter((coupon) => coupon.featured)
+    .sort((a, b) => b.used - a.used)
+    .slice(0, 6)
+    .map((coupon) => {
+      const store = stores.find((s) => s.coupons.some((c) => c.id === coupon.id))
+      return {
+        ...coupon,
+        store: store?.name || "",
+        logo: store?.logo || "",
+        link: `https://${store?.name.toLowerCase()}.com`,
+      }
+    })
 
-export function getFeaturedGiftCards(): GiftCard[] {
-  return giftCardsData.filter((card) => card.featured)
-}
-
-export function getTopDeals(): TopDeal {
-  const allCoupons = getAllCoupons()
-  const featuredCoupons = allCoupons.filter((coupon) => coupon.featured).slice(0, 4)
-  const featuredGiftCards = getFeaturedGiftCards().slice(0, 4)
+  const featuredGiftCards = giftCards
+    .filter((card) => card.featured)
+    .slice(0, 4)
+    .map((card) => ({
+      ...card,
+      denominations: `₹${Math.min(...card.denominations)}-₹${Math.max(...card.denominations)}`,
+    }))
 
   return {
     coupons: featuredCoupons,
@@ -434,101 +319,27 @@ export function getTopDeals(): TopDeal {
   }
 }
 
-export function getCouponsByCategory(category: string): Coupon[] {
-  const allCoupons = getAllCoupons()
-  return allCoupons.filter((coupon) => coupon.category.toLowerCase() === category.toLowerCase())
+export function getFeaturedStores() {
+  return stores.filter((store) => store.featured).slice(0, 12)
 }
 
-export function getStoresByCategory(category: string): Store[] {
-  return Object.values(storesData).filter((store) => store.category.toLowerCase() === category.toLowerCase())
-}
-
-export function searchStores(query: string): Store[] {
-  const searchTerm = query.toLowerCase()
-  return Object.values(storesData).filter(
+export function searchStores(query: string) {
+  return stores.filter(
     (store) =>
-      store.name.toLowerCase().includes(searchTerm) ||
-      store.description.toLowerCase().includes(searchTerm) ||
-      store.category.toLowerCase().includes(searchTerm),
+      store.name.toLowerCase().includes(query.toLowerCase()) ||
+      store.category.toLowerCase().includes(query.toLowerCase()) ||
+      store.description.toLowerCase().includes(query.toLowerCase()),
   )
 }
 
-export function searchCoupons(query: string): Coupon[] {
-  const searchTerm = query.toLowerCase()
-  const allCoupons = getAllCoupons()
-  return allCoupons.filter(
-    (coupon) =>
-      coupon.title.toLowerCase().includes(searchTerm) ||
-      coupon.description.toLowerCase().includes(searchTerm) ||
-      coupon.store.toLowerCase().includes(searchTerm) ||
-      coupon.category.toLowerCase().includes(searchTerm),
-  )
+export function getStoreByName(name: string) {
+  return stores.find((store) => store.name.toLowerCase().replace(/\s+/g, "-") === name.toLowerCase())
 }
 
-// Top Deals Data for Homepage
-export const topDealsData = [
-  {
-    id: "electronics-mega",
-    title: "Electronics Mega Sale",
-    subtitle: "Limited Time",
-    description: "Up to 70% off on smartphones, laptops, headphones & more",
-    bgColor: "from-blue-600 to-purple-700",
-    image: "/electronics/smartphones.png",
-    link: "/category/electronics",
-    cta: "Shop Electronics",
-    products: [
-      { name: "iPhone", image: "/electronics/smartphones.png", discount: "15% Off" },
-      { name: "MacBook", image: "/electronics/laptops.png", discount: "20% Off" },
-      { name: "AirPods", image: "/electronics/headphones.png", discount: "25% Off" },
-      { name: "iPad", image: "/electronics/tablets.png", discount: "18% Off" },
-    ],
-  },
-  {
-    id: "fashion-fest",
-    title: "Fashion Festival",
-    subtitle: "Trending Now",
-    description: "Latest trends in clothing, footwear & accessories",
-    bgColor: "from-pink-500 to-rose-600",
-    image: "/fashion/womens-clothing.png",
-    link: "/category/fashion",
-    cta: "Shop Fashion",
-    products: [
-      { name: "Dresses", image: "/fashion/womens-clothing.png", discount: "40% Off" },
-      { name: "Shoes", image: "/fashion/footwear.png", discount: "35% Off" },
-      { name: "Bags", image: "/fashion/accessories.png", discount: "30% Off" },
-      { name: "Watches", image: "/fashion/accessories.png", discount: "45% Off" },
-    ],
-  },
-  {
-    id: "beauty-bonanza",
-    title: "Beauty Bonanza",
-    subtitle: "Glow Up",
-    description: "Premium skincare, makeup & wellness products",
-    bgColor: "from-purple-500 to-pink-600",
-    image: "/beauty/makeup.png",
-    link: "/category/beauty",
-    cta: "Shop Beauty",
-    products: [
-      { name: "Skincare", image: "/beauty/skincare.png", discount: "30% Off" },
-      { name: "Makeup", image: "/beauty/makeup.png", discount: "25% Off" },
-      { name: "Haircare", image: "/beauty/haircare.png", discount: "35% Off" },
-      { name: "Fragrance", image: "/beauty/fragrances.png", discount: "20% Off" },
-    ],
-  },
-  {
-    id: "home-makeover",
-    title: "Home Makeover",
-    subtitle: "Transform",
-    description: "Furniture, decor & essentials for your dream home",
-    bgColor: "from-green-500 to-teal-600",
-    image: "/home/furniture.png",
-    link: "/category/home",
-    cta: "Shop Home",
-    products: [
-      { name: "Furniture", image: "/home/furniture.png", discount: "50% Off" },
-      { name: "Decor", image: "/home/home-decor.png", discount: "40% Off" },
-      { name: "Kitchen", image: "/home/kitchen-dining.png", discount: "35% Off" },
-      { name: "Bedding", image: "/home/bedding-bath.png", discount: "45% Off" },
-    ],
-  },
-]
+export function getCategoryByName(name: string) {
+  return categories.find((category) => category.name.toLowerCase().replace(/\s+/g, "-") === name.toLowerCase())
+}
+
+export function getStoresByCategory(categoryName: string) {
+  return stores.filter((store) => store.category.toLowerCase() === categoryName.toLowerCase())
+}

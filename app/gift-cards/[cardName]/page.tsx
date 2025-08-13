@@ -11,7 +11,46 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { MobileHeader } from "@/components/mobile-header"
-import { getGiftCardByName } from "@/lib/data"
+
+// Mock gift cards data
+const mockGiftCards = [
+  {
+    id: "1",
+    name: "Amazon",
+    logo: "/amazon-logo.png",
+    description: "Shop for everything on Amazon with gift cards",
+    category: "Shopping",
+    denominations: [100, 250, 500, 1000, 2000, 5000],
+    customAmount: { min: 50, max: 10000 },
+    cashback: "2%",
+    featured: true,
+    color: "from-orange-400 to-orange-600",
+  },
+  {
+    id: "2",
+    name: "Myntra",
+    logo: "/myntra-logo.png",
+    description: "Fashion and lifestyle gift cards",
+    category: "Fashion",
+    denominations: [250, 500, 1000, 2000, 3000],
+    customAmount: { min: 100, max: 5000 },
+    cashback: "3%",
+    featured: true,
+    color: "from-pink-400 to-pink-600",
+  },
+  {
+    id: "3",
+    name: "Flipkart",
+    logo: "/flipkart-logo.png",
+    description: "India's leading e-commerce platform gift cards",
+    category: "Shopping",
+    denominations: [100, 250, 500, 1000, 2000, 5000],
+    customAmount: { min: 50, max: 10000 },
+    cashback: "1.5%",
+    featured: true,
+    color: "from-blue-400 to-blue-600",
+  },
+]
 
 export default function GiftCardPage({ params }: { params: { cardName: string } }) {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null)
@@ -20,7 +59,7 @@ export default function GiftCardPage({ params }: { params: { cardName: string } 
   const [recipientEmail, setRecipientEmail] = useState("")
   const [personalMessage, setPersonalMessage] = useState("")
 
-  const giftCard = getGiftCardByName(params.cardName)
+  const giftCard = mockGiftCards.find((card) => card.name.toLowerCase() === params.cardName.toLowerCase())
 
   if (!giftCard) {
     return (

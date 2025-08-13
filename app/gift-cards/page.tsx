@@ -3,24 +3,91 @@
 import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Gift, Star, Percent, Filter, Search, ArrowRight, Zap } from "lucide-react"
+import { Gift, Percent, Filter, Search, ArrowRight, Zap } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { MobileHeader } from "@/components/mobile-header"
-import { getAllGiftCards } from "@/lib/data"
+
+// Mock gift cards data
+const mockGiftCards = [
+  {
+    id: "1",
+    name: "Amazon",
+    logo: "/amazon-logo.png",
+    description: "Shop for everything on Amazon with gift cards",
+    category: "Shopping",
+    denominations: [100, 250, 500, 1000, 2000, 5000],
+    cashback: "2%",
+    featured: true,
+    color: "from-orange-400 to-orange-600",
+  },
+  {
+    id: "2",
+    name: "Myntra",
+    logo: "/myntra-logo.png",
+    description: "Fashion and lifestyle gift cards",
+    category: "Fashion",
+    denominations: [250, 500, 1000, 2000, 3000],
+    cashback: "3%",
+    featured: true,
+    color: "from-pink-400 to-pink-600",
+  },
+  {
+    id: "3",
+    name: "Flipkart",
+    logo: "/flipkart-logo.png",
+    description: "India's leading e-commerce platform gift cards",
+    category: "Shopping",
+    denominations: [100, 250, 500, 1000, 2000, 5000],
+    cashback: "1.5%",
+    featured: true,
+    color: "from-blue-400 to-blue-600",
+  },
+  {
+    id: "4",
+    name: "Zomato",
+    logo: "/generic-food-delivery-logo.png",
+    description: "Food delivery and dining gift cards",
+    category: "Food & Dining",
+    denominations: [100, 200, 500, 1000, 2000],
+    cashback: "4%",
+    featured: true,
+    color: "from-red-400 to-red-600",
+  },
+  {
+    id: "5",
+    name: "Nykaa",
+    logo: "/nykaa-logo.png",
+    description: "Beauty and wellness gift cards",
+    category: "Beauty",
+    denominations: [250, 500, 1000, 2000],
+    cashback: "2.5%",
+    featured: false,
+    color: "from-purple-400 to-pink-500",
+  },
+  {
+    id: "6",
+    name: "BookMyShow",
+    logo: "/generic-entertainment-logo.png",
+    description: "Movie tickets and entertainment gift cards",
+    category: "Entertainment",
+    denominations: [200, 500, 1000, 1500],
+    cashback: "1%",
+    featured: false,
+    color: "from-indigo-400 to-purple-600",
+  },
+]
 
 export default function GiftCardsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [sortBy, setSortBy] = useState("featured")
 
-  const allGiftCards = getAllGiftCards()
-
   // Filter and sort gift cards
-  const filteredCards = allGiftCards
+  const filteredCards = mockGiftCards
     .filter((card) => {
       const matchesSearch =
         card.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -42,7 +109,7 @@ export default function GiftCardsPage() {
       }
     })
 
-  const categories = ["all", "shopping", "fashion", "food & dining", "beauty", "entertainment", "travel"]
+  const categories = ["all", "Shopping", "Fashion", "Food & Dining", "Beauty", "Entertainment", "Travel"]
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
@@ -63,11 +130,11 @@ export default function GiftCardsPage() {
             {/* Stats */}
             <div className="grid grid-cols-3 gap-6 max-w-2xl mx-auto">
               <div className="text-center">
-                <div className="text-2xl font-bold">{allGiftCards.length}+</div>
+                <div className="text-2xl font-bold">{mockGiftCards.length}+</div>
                 <div className="text-sm text-purple-100">Gift Cards</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold">Up to 5%</div>
+                <div className="text-2xl font-bold">Up to 4%</div>
                 <div className="text-sm text-purple-100">Cashback</div>
               </div>
               <div className="text-center">
@@ -180,9 +247,9 @@ export default function GiftCardsPage() {
                   <CardContent className="pt-0">
                     <div className="space-y-3">
                       <div className="flex items-center justify-between text-white/90 text-sm">
-                        <span>Amount Range</span>
+                        <span>Denominations</span>
                         <span className="font-medium">
-                          ₹{card.customAmount.min} - ₹{card.customAmount.max.toLocaleString()}
+                          ₹{Math.min(...card.denominations)} - ₹{Math.max(...card.denominations)}
                         </span>
                       </div>
 
@@ -192,11 +259,8 @@ export default function GiftCardsPage() {
                       </div>
 
                       <div className="flex items-center justify-between text-white/90 text-sm">
-                        <span>Rating</span>
-                        <div className="flex items-center">
-                          <Star className="h-3 w-3 fill-current mr-1" />
-                          <span>4.8</span>
-                        </div>
+                        <span>Validity</span>
+                        <span className="font-medium">1 Year</span>
                       </div>
 
                       <Button
@@ -256,7 +320,7 @@ export default function GiftCardsPage() {
                 <Percent className="h-8 w-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold mb-2">Cashback Rewards</h3>
-              <p className="text-gray-600">Earn up to 5% cashback on every gift card purchase. More savings for you!</p>
+              <p className="text-gray-600">Earn up to 4% cashback on every gift card purchase. More savings for you!</p>
             </div>
 
             <div className="text-center">

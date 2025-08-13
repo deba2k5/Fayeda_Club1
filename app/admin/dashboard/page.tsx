@@ -36,16 +36,103 @@ import {
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { storesData, getAllCoupons, getAllGiftCards, cropImageTo64x64 } from "@/lib/data"
 
-// Mock data for dashboard stats
-const dashboardStats = {
-  totalBrands: Object.keys(storesData).length,
-  totalCoupons: getAllCoupons().length,
-  totalGiftCards: getAllGiftCards().length,
-  activeCoupons: getAllCoupons().filter((c) => c.expiryDays > 0).length,
-  expiringSoon: getAllCoupons().filter((c) => c.expiryDays <= 3).length,
-}
+// Mock data for dashboard stats - using static data since we don't have database
+const mockStores = [
+  {
+    id: "1",
+    name: "Amazon",
+    logo: "/amazon-logo.png",
+    description: "World's largest online marketplace",
+    category: "E-commerce",
+    rating: 4.8,
+    totalCoupons: 25,
+  },
+  {
+    id: "2",
+    name: "Myntra",
+    logo: "/myntra-logo.png",
+    description: "India's leading fashion destination",
+    category: "Fashion",
+    rating: 4.6,
+    totalCoupons: 18,
+  },
+  {
+    id: "3",
+    name: "Flipkart",
+    logo: "/flipkart-logo.png",
+    description: "India's leading e-commerce platform",
+    category: "E-commerce",
+    rating: 4.5,
+    totalCoupons: 22,
+  },
+]
+
+const mockCoupons = [
+  {
+    id: "1",
+    title: "Flat 50% Off on Electronics",
+    store: "Amazon",
+    code: "ELECTRONICS50",
+    discount: "Up to ₹15,000",
+    category: "Electronics",
+    expiryDays: 5,
+    featured: true,
+  },
+  {
+    id: "2",
+    title: "Fashion Sale - Up to 60% Off",
+    store: "Myntra",
+    code: "FASHION60",
+    discount: "Up to ₹3,000",
+    category: "Fashion",
+    expiryDays: 7,
+    featured: true,
+  },
+  {
+    id: "3",
+    title: "Big Billion Days Sale",
+    store: "Flipkart",
+    code: "BIGBILLION70",
+    discount: "Up to ₹20,000",
+    category: "Electronics",
+    expiryDays: 3,
+    featured: true,
+  },
+]
+
+const mockGiftCards = [
+  {
+    id: "1",
+    name: "Amazon",
+    logo: "/amazon-logo.png",
+    description: "Shop for everything on Amazon",
+    category: "E-commerce",
+    denominations: [100, 250, 500, 1000, 2000, 5000],
+    cashback: "2%",
+    featured: true,
+  },
+  {
+    id: "2",
+    name: "Myntra",
+    logo: "/myntra-logo.png",
+    description: "Fashion and lifestyle gift cards",
+    category: "Fashion",
+    denominations: [250, 500, 1000, 2000, 3000],
+    cashback: "3%",
+    featured: true,
+  },
+  {
+    id: "3",
+    name: "Flipkart",
+    logo: "/flipkart-logo.png",
+    description: "India's leading e-commerce platform gift cards",
+    category: "E-commerce",
+    denominations: [100, 250, 500, 1000, 2000, 5000],
+    cashback: "1.5%",
+    featured: true,
+  },
+]
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview")
@@ -79,10 +166,10 @@ export default function AdminDashboard() {
     featured: false,
   })
 
-  // State for data (in real app, this would come from API/database)
-  const [brands, setBrands] = useState(Object.values(storesData))
-  const [coupons, setCoupons] = useState(getAllCoupons())
-  const [giftCards, setGiftCards] = useState(getAllGiftCards())
+  // State for data
+  const [brands, setBrands] = useState(mockStores)
+  const [coupons, setCoupons] = useState(mockCoupons)
+  const [giftCardsList, setGiftCardsList] = useState(mockGiftCards)
   const [editingItem, setEditingItem] = useState<any>(null)
 
   // Image upload handling
@@ -91,14 +178,17 @@ export default function AdminDashboard() {
   const handleImageUpload = async (file: File, type: "brand" | "giftcard") => {
     setUploadingImage(true)
     try {
-      const croppedImage = await cropImageTo64x64(file)
+      // Simulate image processing
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const imageUrl = URL.createObjectURL(file)
+
       if (type === "brand") {
-        setNewBrand({ ...newBrand, logo: croppedImage })
+        setNewBrand({ ...newBrand, logo: imageUrl })
       } else {
-        setNewGiftCard({ ...newGiftCard, logo: croppedImage })
+        setNewGiftCard({ ...newGiftCard, logo: imageUrl })
       }
     } catch (error) {
-      console.error("Error cropping image:", error)
+      console.error("Error processing image:", error)
       alert("Error processing image. Please try again.")
     } finally {
       setUploadingImage(false)
@@ -108,15 +198,13 @@ export default function AdminDashboard() {
   const handleAddBrand = (e: React.FormEvent) => {
     e.preventDefault()
     const newBrandData = {
-      id: brands.length + 1,
+      id: String(brands.length + 1),
       name: newBrand.name,
       logo: newBrand.logo || "/placeholder.svg",
       description: newBrand.description,
-      website: newBrand.website,
+      category: "General",
       rating: 4.5,
       totalCoupons: 0,
-      categories: ["General"],
-      coupons: [],
     }
 
     if (editingItem) {
@@ -132,18 +220,14 @@ export default function AdminDashboard() {
   const handleAddCoupon = (e: React.FormEvent) => {
     e.preventDefault()
     const newCouponData = {
-      id: coupons.length + 1,
+      id: String(coupons.length + 1),
       title: newCoupon.title,
-      description: newCoupon.description,
-      code: newCoupon.code,
-      expiryDays: Number.parseInt(newCoupon.expiryDays),
-      type: newCoupon.type as "code" | "deal",
-      savings: newCoupon.savings,
-      category: newCoupon.category,
-      featured: newCoupon.featured,
       store: newCoupon.brand,
-      storeLogo: brands.find((b) => b.name === newCoupon.brand)?.logo || "/placeholder.svg",
-      storeRating: 4.5,
+      code: newCoupon.code,
+      discount: newCoupon.savings,
+      category: newCoupon.category,
+      expiryDays: Number.parseInt(newCoupon.expiryDays),
+      featured: newCoupon.featured,
     }
 
     if (editingItem) {
@@ -166,49 +250,43 @@ export default function AdminDashboard() {
       .filter((d) => !isNaN(d))
 
     const newGiftCardData = {
-      id: giftCards.length + 1,
+      id: String(giftCardsList.length + 1),
       name: newGiftCard.name,
       logo: newGiftCard.logo || "/placeholder.svg",
       description: newGiftCard.description,
       category: newGiftCard.category,
-      denominations,
-      customAmount: {
-        min: Number.parseInt(newGiftCard.minAmount),
-        max: Number.parseInt(newGiftCard.maxAmount),
-      },
+      denominations: denominations,
       cashback: newGiftCard.cashback,
       featured: newGiftCard.featured,
-      color: "from-blue-400 to-blue-600",
     }
 
     if (editingItem) {
-      setGiftCards(
-        giftCards.map((card) => (card.id === editingItem.id ? { ...newGiftCardData, id: editingItem.id } : card)),
+      setGiftCardsList(
+        giftCardsList.map((card) => (card.id === editingItem.id ? { ...newGiftCardData, id: editingItem.id } : card)),
       )
       setEditingItem(null)
     } else {
-      setGiftCards([...giftCards, newGiftCardData])
+      setGiftCardsList([...giftCardsList, newGiftCardData])
     }
 
     resetGiftCardForm()
   }
 
-  const handleDeleteBrand = (brandId: number) => {
-    if (confirm("Are you sure you want to delete this brand? This will also remove all associated coupons.")) {
+  const handleDeleteBrand = (brandId: string) => {
+    if (confirm("Are you sure you want to delete this brand?")) {
       setBrands(brands.filter((brand) => brand.id !== brandId))
-      setCoupons(coupons.filter((coupon) => coupon.store !== brands.find((b) => b.id === brandId)?.name))
     }
   }
 
-  const handleDeleteCoupon = (couponId: number) => {
+  const handleDeleteCoupon = (couponId: string) => {
     if (confirm("Are you sure you want to delete this coupon?")) {
       setCoupons(coupons.filter((coupon) => coupon.id !== couponId))
     }
   }
 
-  const handleDeleteGiftCard = (cardId: number) => {
+  const handleDeleteGiftCard = (cardId: string) => {
     if (confirm("Are you sure you want to delete this gift card?")) {
-      setGiftCards(giftCards.filter((card) => card.id !== cardId))
+      setGiftCardsList(giftCardsList.filter((card) => card.id !== cardId))
     }
   }
 
@@ -218,7 +296,7 @@ export default function AdminDashboard() {
       name: brand.name,
       logo: brand.logo,
       description: brand.description,
-      website: brand.website,
+      website: "",
     })
     setIsAddBrandOpen(true)
   }
@@ -229,10 +307,10 @@ export default function AdminDashboard() {
       title: coupon.title,
       brand: coupon.store,
       code: coupon.code,
-      description: coupon.description,
+      description: "",
       expiryDays: coupon.expiryDays.toString(),
-      type: coupon.type,
-      savings: coupon.savings,
+      type: "code",
+      savings: coupon.discount,
       category: coupon.category,
       featured: coupon.featured,
     })
@@ -247,8 +325,8 @@ export default function AdminDashboard() {
       description: card.description,
       category: card.category,
       denominations: card.denominations.join(", "),
-      minAmount: card.customAmount.min.toString(),
-      maxAmount: card.customAmount.max.toString(),
+      minAmount: "100",
+      maxAmount: "10000",
       cashback: card.cashback,
       featured: card.featured,
     })
@@ -387,7 +465,7 @@ export default function AdminDashboard() {
           {activeTab === "overview" && (
             <div className="space-y-6">
               {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Total Brands</CardTitle>
@@ -414,28 +492,18 @@ export default function AdminDashboard() {
                     <Gift className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{giftCards.length}</div>
+                    <div className="text-2xl font-bold">{giftCardsList.length}</div>
                     <p className="text-xs text-muted-foreground">Available cards</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Active Coupons</CardTitle>
-                    <Tag className="h-4 w-4 text-green-600" />
+                    <CardTitle className="text-sm font-medium">Active Users</CardTitle>
+                    <BarChart3 className="h-4 w-4 text-green-600" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-green-600">{dashboardStats.activeCoupons}</div>
-                    <p className="text-xs text-muted-foreground">Currently valid</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Expiring Soon</CardTitle>
-                    <Tag className="h-4 w-4 text-orange-600" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-orange-600">{dashboardStats.expiringSoon}</div>
-                    <p className="text-xs text-muted-foreground">Next 3 days</p>
+                    <div className="text-2xl font-bold text-green-600">50,000+</div>
+                    <p className="text-xs text-muted-foreground">Registered users</p>
                   </CardContent>
                 </Card>
               </div>
@@ -545,12 +613,11 @@ export default function AdminDashboard() {
                           onChange={(e) => setNewBrand({ ...newBrand, website: e.target.value })}
                           placeholder="https://example.com"
                           type="url"
-                          required
                         />
                       </div>
 
                       <div>
-                        <Label htmlFor="brandLogo">Logo (64x64px)</Label>
+                        <Label htmlFor="brandLogo">Logo</Label>
                         <div className="flex items-center space-x-4">
                           {newBrand.logo && (
                             <div className="relative">
@@ -583,9 +650,7 @@ export default function AdminDashboard() {
                               }}
                               disabled={uploadingImage}
                             />
-                            <p className="text-xs text-gray-500 mt-1">
-                              Image will be automatically cropped to 64x64px (1:1 ratio)
-                            </p>
+                            <p className="text-xs text-gray-500 mt-1">Upload brand logo</p>
                           </div>
                         </div>
                       </div>
@@ -610,7 +675,7 @@ export default function AdminDashboard() {
                       <TableRow>
                         <TableHead>Brand</TableHead>
                         <TableHead>Description</TableHead>
-                        <TableHead>Website</TableHead>
+                        <TableHead>Category</TableHead>
                         <TableHead>Coupons</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
@@ -638,16 +703,7 @@ export default function AdminDashboard() {
                               </div>
                             </TableCell>
                             <TableCell className="max-w-xs truncate">{brand.description}</TableCell>
-                            <TableCell>
-                              <a
-                                href={brand.website}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:underline"
-                              >
-                                {brand.website}
-                              </a>
-                            </TableCell>
+                            <TableCell>{brand.category}</TableCell>
                             <TableCell>{brand.totalCoupons}</TableCell>
                             <TableCell>
                               <Badge variant="secondary">Active</Badge>
@@ -738,17 +794,7 @@ export default function AdminDashboard() {
                           id="couponCode"
                           value={newCoupon.code}
                           onChange={(e) => setNewCoupon({ ...newCoupon, code: e.target.value })}
-                          placeholder="Enter coupon code (leave empty for deals)"
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="couponDescription">Description</Label>
-                        <Textarea
-                          id="couponDescription"
-                          value={newCoupon.description}
-                          onChange={(e) => setNewCoupon({ ...newCoupon, description: e.target.value })}
-                          placeholder="Enter coupon description"
+                          placeholder="Enter coupon code"
                           required
                         />
                       </div>
@@ -781,7 +827,6 @@ export default function AdminDashboard() {
                             <SelectItem value="Health & Beauty">Health & Beauty</SelectItem>
                             <SelectItem value="Home & Garden">Home & Garden</SelectItem>
                             <SelectItem value="Entertainment">Entertainment</SelectItem>
-                            <SelectItem value="All">All Categories</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -797,22 +842,6 @@ export default function AdminDashboard() {
                           min="1"
                           required
                         />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="couponType">Type</Label>
-                        <Select
-                          value={newCoupon.type}
-                          onValueChange={(value) => setNewCoupon({ ...newCoupon, type: value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="code">Code</SelectItem>
-                            <SelectItem value="deal">Deal</SelectItem>
-                          </SelectContent>
-                        </Select>
                       </div>
 
                       <div className="flex items-center space-x-2">
@@ -847,7 +876,7 @@ export default function AdminDashboard() {
                         <TableHead>Title</TableHead>
                         <TableHead>Brand</TableHead>
                         <TableHead>Code</TableHead>
-                        <TableHead>Savings</TableHead>
+                        <TableHead>Discount</TableHead>
                         <TableHead>Category</TableHead>
                         <TableHead>Expiry</TableHead>
                         <TableHead>Status</TableHead>
@@ -876,13 +905,9 @@ export default function AdminDashboard() {
                             </TableCell>
                             <TableCell>{coupon.store}</TableCell>
                             <TableCell>
-                              {coupon.code ? (
-                                <code className="bg-gray-100 px-2 py-1 rounded text-sm">{coupon.code}</code>
-                              ) : (
-                                <span className="text-gray-500">No code</span>
-                              )}
+                              <code className="bg-gray-100 px-2 py-1 rounded text-sm">{coupon.code}</code>
                             </TableCell>
-                            <TableCell className="text-green-600 font-medium">{coupon.savings}</TableCell>
+                            <TableCell className="text-green-600 font-medium">{coupon.discount}</TableCell>
                             <TableCell>
                               <Badge variant="outline">{coupon.category}</Badge>
                             </TableCell>
@@ -926,7 +951,7 @@ export default function AdminDashboard() {
           {activeTab === "giftcards" && (
             <div className="space-y-6">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Manage Gift Cards ({giftCards.length})</h3>
+                <h3 className="text-lg font-semibold">Manage Gift Cards ({giftCardsList.length})</h3>
                 <Dialog open={isAddGiftCardOpen} onOpenChange={setIsAddGiftCardOpen}>
                   <DialogTrigger asChild>
                     <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600">
@@ -974,7 +999,7 @@ export default function AdminDashboard() {
                             <SelectValue placeholder="Select category" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Shopping">Shopping</SelectItem>
+                            <SelectItem value="E-commerce">E-commerce</SelectItem>
                             <SelectItem value="Fashion">Fashion</SelectItem>
                             <SelectItem value="Food & Dining">Food & Dining</SelectItem>
                             <SelectItem value="Travel">Travel</SelectItem>
@@ -995,35 +1020,8 @@ export default function AdminDashboard() {
                         />
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="giftCardMinAmount">Min Amount</Label>
-                          <Input
-                            id="giftCardMinAmount"
-                            type="number"
-                            value={newGiftCard.minAmount}
-                            onChange={(e) => setNewGiftCard({ ...newGiftCard, minAmount: e.target.value })}
-                            placeholder="50"
-                            min="1"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="giftCardMaxAmount">Max Amount</Label>
-                          <Input
-                            id="giftCardMaxAmount"
-                            type="number"
-                            value={newGiftCard.maxAmount}
-                            onChange={(e) => setNewGiftCard({ ...newGiftCard, maxAmount: e.target.value })}
-                            placeholder="10000"
-                            min="1"
-                            required
-                          />
-                        </div>
-                      </div>
-
                       <div>
-                        <Label htmlFor="giftCardCashback">Cashback (%)</Label>
+                        <Label htmlFor="giftCardCashback">Cashback</Label>
                         <Input
                           id="giftCardCashback"
                           value={newGiftCard.cashback}
@@ -1034,7 +1032,7 @@ export default function AdminDashboard() {
                       </div>
 
                       <div>
-                        <Label htmlFor="giftCardLogo">Logo (64x64px)</Label>
+                        <Label htmlFor="giftCardLogo">Logo</Label>
                         <div className="flex items-center space-x-4">
                           {newGiftCard.logo && (
                             <div className="relative">
@@ -1067,9 +1065,7 @@ export default function AdminDashboard() {
                               }}
                               disabled={uploadingImage}
                             />
-                            <p className="text-xs text-gray-500 mt-1">
-                              Image will be automatically cropped to 64x64px (1:1 ratio)
-                            </p>
+                            <p className="text-xs text-gray-500 mt-1">Upload gift card logo</p>
                           </div>
                         </div>
                       </div>
@@ -1105,14 +1101,14 @@ export default function AdminDashboard() {
                       <TableRow>
                         <TableHead>Gift Card</TableHead>
                         <TableHead>Category</TableHead>
-                        <TableHead>Amount Range</TableHead>
+                        <TableHead>Denominations</TableHead>
                         <TableHead>Cashback</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {giftCards
+                      {giftCardsList
                         .filter(
                           (card) =>
                             card.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -1143,7 +1139,7 @@ export default function AdminDashboard() {
                               <Badge variant="outline">{card.category}</Badge>
                             </TableCell>
                             <TableCell>
-                              ₹{card.customAmount.min} - ₹{card.customAmount.max.toLocaleString()}
+                              ₹{Math.min(...card.denominations)} - ₹{Math.max(...card.denominations)}
                             </TableCell>
                             <TableCell className="text-green-600 font-medium">{card.cashback}</TableCell>
                             <TableCell>

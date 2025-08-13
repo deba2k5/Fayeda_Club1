@@ -1,30 +1,14 @@
 "use client"
 
-import type React from "react"
 import { useState } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import {
-  BarChart3,
-  Package,
-  Tag,
-  Plus,
-  Search,
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  LogOut,
-  Home,
-  Settings,
-  Gift,
-  X,
-} from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import {
   Dialog,
   DialogContent,
@@ -33,1149 +17,886 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-
-// Mock data for dashboard stats - using static data since we don't have database
-const mockStores = [
-  {
-    id: "1",
-    name: "Amazon",
-    logo: "/amazon-logo.png",
-    description: "World's largest online marketplace",
-    category: "E-commerce",
-    rating: 4.8,
-    totalCoupons: 25,
-  },
-  {
-    id: "2",
-    name: "Myntra",
-    logo: "/myntra-logo.png",
-    description: "India's leading fashion destination",
-    category: "Fashion",
-    rating: 4.6,
-    totalCoupons: 18,
-  },
-  {
-    id: "3",
-    name: "Flipkart",
-    logo: "/flipkart-logo.png",
-    description: "India's leading e-commerce platform",
-    category: "E-commerce",
-    rating: 4.5,
-    totalCoupons: 22,
-  },
-]
-
-const mockCoupons = [
-  {
-    id: "1",
-    title: "Flat 50% Off on Electronics",
-    store: "Amazon",
-    code: "ELECTRONICS50",
-    discount: "Up to ₹15,000",
-    category: "Electronics",
-    expiryDays: 5,
-    featured: true,
-  },
-  {
-    id: "2",
-    title: "Fashion Sale - Up to 60% Off",
-    store: "Myntra",
-    code: "FASHION60",
-    discount: "Up to ₹3,000",
-    category: "Fashion",
-    expiryDays: 7,
-    featured: true,
-  },
-  {
-    id: "3",
-    title: "Big Billion Days Sale",
-    store: "Flipkart",
-    code: "BIGBILLION70",
-    discount: "Up to ₹20,000",
-    category: "Electronics",
-    expiryDays: 3,
-    featured: true,
-  },
-]
-
-const mockGiftCards = [
-  {
-    id: "1",
-    name: "Amazon",
-    logo: "/amazon-logo.png",
-    description: "Shop for everything on Amazon",
-    category: "E-commerce",
-    denominations: [100, 250, 500, 1000, 2000, 5000],
-    cashback: "2%",
-    featured: true,
-  },
-  {
-    id: "2",
-    name: "Myntra",
-    logo: "/myntra-logo.png",
-    description: "Fashion and lifestyle gift cards",
-    category: "Fashion",
-    denominations: [250, 500, 1000, 2000, 3000],
-    cashback: "3%",
-    featured: true,
-  },
-  {
-    id: "3",
-    name: "Flipkart",
-    logo: "/flipkart-logo.png",
-    description: "India's leading e-commerce platform gift cards",
-    category: "E-commerce",
-    denominations: [100, 250, 500, 1000, 2000, 5000],
-    cashback: "1.5%",
-    featured: true,
-  },
-]
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+  Plus,
+  Edit,
+  Trash2,
+  MoreHorizontal,
+  Users,
+  ShoppingBag,
+  Gift,
+  TrendingUp,
+  DollarSign,
+  Eye,
+  Star,
+  Activity,
+  Bell,
+  Settings,
+  Search,
+  Download,
+  Upload,
+  BarChart3,
+  PieChart,
+  LineChart,
+  Target,
+  Award,
+  Zap,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  XCircle,
+} from "lucide-react"
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview")
-  const [searchQuery, setSearchQuery] = useState("")
-  const [isAddBrandOpen, setIsAddBrandOpen] = useState(false)
-  const [isAddCouponOpen, setIsAddCouponOpen] = useState(false)
-  const [isAddGiftCardOpen, setIsAddGiftCardOpen] = useState(false)
 
-  // State for forms
-  const [newBrand, setNewBrand] = useState({ name: "", logo: "", description: "", website: "" })
-  const [newCoupon, setNewCoupon] = useState({
-    title: "",
-    brand: "",
-    code: "",
-    description: "",
-    expiryDays: "",
-    type: "code",
-    savings: "",
-    category: "",
-    featured: false,
-  })
-  const [newGiftCard, setNewGiftCard] = useState({
-    name: "",
-    logo: "",
-    description: "",
-    category: "",
-    denominations: "",
-    minAmount: "",
-    maxAmount: "",
-    cashback: "",
-    featured: false,
-  })
+  // Mock data
+  const stats = [
+    {
+      title: "Total Users",
+      value: "12,543",
+      change: "+12.5%",
+      icon: Users,
+      color: "from-blue-500 to-cyan-500",
+      bgColor: "bg-blue-50",
+      textColor: "text-blue-600",
+    },
+    {
+      title: "Active Stores",
+      value: "487",
+      change: "+8.2%",
+      icon: ShoppingBag,
+      color: "from-green-500 to-emerald-500",
+      bgColor: "bg-green-50",
+      textColor: "text-green-600",
+    },
+    {
+      title: "Gift Cards Sold",
+      value: "2,847",
+      change: "+23.1%",
+      icon: Gift,
+      color: "from-purple-500 to-pink-500",
+      bgColor: "bg-purple-50",
+      textColor: "text-purple-600",
+    },
+    {
+      title: "Revenue",
+      value: "₹4.2L",
+      change: "+15.3%",
+      icon: DollarSign,
+      color: "from-orange-500 to-red-500",
+      bgColor: "bg-orange-50",
+      textColor: "text-orange-600",
+    },
+  ]
 
-  // State for data
-  const [brands, setBrands] = useState(mockStores)
-  const [coupons, setCoupons] = useState(mockCoupons)
-  const [giftCardsList, setGiftCardsList] = useState(mockGiftCards)
-  const [editingItem, setEditingItem] = useState<any>(null)
+  const recentOrders = [
+    {
+      id: "ORD-001",
+      customer: "Rahul Sharma",
+      email: "rahul@example.com",
+      product: "Amazon Gift Card",
+      amount: "₹1,000",
+      status: "completed",
+      date: "2024-01-15",
+      avatar: "/placeholder-user.jpg",
+    },
+    {
+      id: "ORD-002",
+      customer: "Priya Patel",
+      email: "priya@example.com",
+      product: "Flipkart Gift Card",
+      amount: "₹500",
+      status: "pending",
+      date: "2024-01-15",
+      avatar: "/placeholder-user.jpg",
+    },
+    {
+      id: "ORD-003",
+      customer: "Amit Kumar",
+      email: "amit@example.com",
+      product: "Myntra Gift Card",
+      amount: "₹750",
+      status: "completed",
+      date: "2024-01-14",
+      avatar: "/placeholder-user.jpg",
+    },
+    {
+      id: "ORD-004",
+      customer: "Sneha Singh",
+      email: "sneha@example.com",
+      product: "Nykaa Gift Card",
+      amount: "₹300",
+      status: "failed",
+      date: "2024-01-14",
+      avatar: "/placeholder-user.jpg",
+    },
+    {
+      id: "ORD-005",
+      customer: "Vikash Gupta",
+      email: "vikash@example.com",
+      product: "Swiggy Gift Card",
+      amount: "₹200",
+      status: "completed",
+      date: "2024-01-13",
+      avatar: "/placeholder-user.jpg",
+    },
+  ]
 
-  // Image upload handling
-  const [uploadingImage, setUploadingImage] = useState(false)
-
-  const handleImageUpload = async (file: File, type: "brand" | "giftcard") => {
-    setUploadingImage(true)
-    try {
-      // Simulate image processing
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      const imageUrl = URL.createObjectURL(file)
-
-      if (type === "brand") {
-        setNewBrand({ ...newBrand, logo: imageUrl })
-      } else {
-        setNewGiftCard({ ...newGiftCard, logo: imageUrl })
-      }
-    } catch (error) {
-      console.error("Error processing image:", error)
-      alert("Error processing image. Please try again.")
-    } finally {
-      setUploadingImage(false)
-    }
-  }
-
-  const handleAddBrand = (e: React.FormEvent) => {
-    e.preventDefault()
-    const newBrandData = {
-      id: String(brands.length + 1),
-      name: newBrand.name,
-      logo: newBrand.logo || "/placeholder.svg",
-      description: newBrand.description,
-      category: "General",
+  const giftCards = [
+    {
+      id: 1,
+      name: "Amazon Gift Card",
+      category: "E-commerce",
+      price: "₹100 - ₹10,000",
+      discount: "5%",
+      status: "active",
+      sales: 1250,
+      rating: 4.8,
+      image: "/amazon-logo.png",
+    },
+    {
+      id: 2,
+      name: "Flipkart Gift Card",
+      category: "E-commerce",
+      price: "₹50 - ₹5,000",
+      discount: "3%",
+      status: "active",
+      sales: 980,
+      rating: 4.6,
+      image: "/flipkart-logo.png",
+    },
+    {
+      id: 3,
+      name: "Myntra Gift Card",
+      category: "Fashion",
+      price: "₹100 - ₹3,000",
+      discount: "7%",
+      status: "active",
+      sales: 750,
       rating: 4.5,
-      totalCoupons: 0,
+      image: "/myntra-logo.png",
+    },
+    {
+      id: 4,
+      name: "Nykaa Gift Card",
+      category: "Beauty",
+      price: "₹100 - ₹2,000",
+      discount: "10%",
+      status: "inactive",
+      sales: 420,
+      rating: 4.3,
+      image: "/nykaa-logo.png",
+    },
+  ]
+
+  const stores = [
+    {
+      id: 1,
+      name: "Amazon",
+      category: "E-commerce",
+      commission: "2.5%",
+      status: "active",
+      orders: 2450,
+      revenue: "₹12.5L",
+      logo: "/amazon-logo.png",
+    },
+    {
+      id: 2,
+      name: "Flipkart",
+      category: "E-commerce",
+      commission: "2.0%",
+      status: "active",
+      orders: 1890,
+      revenue: "₹8.9L",
+      logo: "/flipkart-logo.png",
+    },
+    {
+      id: 3,
+      name: "Myntra",
+      category: "Fashion",
+      commission: "3.5%",
+      status: "active",
+      orders: 1250,
+      revenue: "₹6.2L",
+      logo: "/myntra-logo.png",
+    },
+    {
+      id: 4,
+      name: "Nykaa",
+      category: "Beauty",
+      commission: "4.0%",
+      status: "pending",
+      orders: 890,
+      revenue: "₹4.1L",
+      logo: "/nykaa-logo.png",
+    },
+  ]
+
+  const activities = [
+    {
+      id: 1,
+      type: "order",
+      message: "New order placed by Rahul Sharma",
+      time: "2 minutes ago",
+      icon: ShoppingBag,
+      color: "text-blue-600",
+    },
+    {
+      id: 2,
+      type: "user",
+      message: "New user registration: Priya Patel",
+      time: "5 minutes ago",
+      icon: Users,
+      color: "text-green-600",
+    },
+    {
+      id: 3,
+      type: "gift-card",
+      message: "Gift card activated: Amazon ₹1000",
+      time: "10 minutes ago",
+      icon: Gift,
+      color: "text-purple-600",
+    },
+    {
+      id: 4,
+      type: "store",
+      message: "Store partnership approved: Zomato",
+      time: "15 minutes ago",
+      icon: Award,
+      color: "text-orange-600",
+    },
+    {
+      id: 5,
+      type: "system",
+      message: "System maintenance completed",
+      time: "1 hour ago",
+      icon: Settings,
+      color: "text-gray-600",
+    },
+  ]
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "completed":
+        return (
+          <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+            <CheckCircle className="w-3 h-3 mr-1" />
+            Completed
+          </Badge>
+        )
+      case "pending":
+        return (
+          <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
+            <Clock className="w-3 h-3 mr-1" />
+            Pending
+          </Badge>
+        )
+      case "failed":
+        return (
+          <Badge className="bg-red-100 text-red-800 hover:bg-red-100">
+            <XCircle className="w-3 h-3 mr-1" />
+            Failed
+          </Badge>
+        )
+      case "active":
+        return (
+          <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+            <CheckCircle className="w-3 h-3 mr-1" />
+            Active
+          </Badge>
+        )
+      case "inactive":
+        return (
+          <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">
+            <XCircle className="w-3 h-3 mr-1" />
+            Inactive
+          </Badge>
+        )
+      default:
+        return <Badge variant="outline">{status}</Badge>
     }
-
-    if (editingItem) {
-      setBrands(brands.map((brand) => (brand.id === editingItem.id ? { ...newBrandData, id: editingItem.id } : brand)))
-      setEditingItem(null)
-    } else {
-      setBrands([...brands, newBrandData])
-    }
-
-    resetBrandForm()
-  }
-
-  const handleAddCoupon = (e: React.FormEvent) => {
-    e.preventDefault()
-    const newCouponData = {
-      id: String(coupons.length + 1),
-      title: newCoupon.title,
-      store: newCoupon.brand,
-      code: newCoupon.code,
-      discount: newCoupon.savings,
-      category: newCoupon.category,
-      expiryDays: Number.parseInt(newCoupon.expiryDays),
-      featured: newCoupon.featured,
-    }
-
-    if (editingItem) {
-      setCoupons(
-        coupons.map((coupon) => (coupon.id === editingItem.id ? { ...newCouponData, id: editingItem.id } : coupon)),
-      )
-      setEditingItem(null)
-    } else {
-      setCoupons([...coupons, newCouponData])
-    }
-
-    resetCouponForm()
-  }
-
-  const handleAddGiftCard = (e: React.FormEvent) => {
-    e.preventDefault()
-    const denominations = newGiftCard.denominations
-      .split(",")
-      .map((d) => Number.parseInt(d.trim()))
-      .filter((d) => !isNaN(d))
-
-    const newGiftCardData = {
-      id: String(giftCardsList.length + 1),
-      name: newGiftCard.name,
-      logo: newGiftCard.logo || "/placeholder.svg",
-      description: newGiftCard.description,
-      category: newGiftCard.category,
-      denominations: denominations,
-      cashback: newGiftCard.cashback,
-      featured: newGiftCard.featured,
-    }
-
-    if (editingItem) {
-      setGiftCardsList(
-        giftCardsList.map((card) => (card.id === editingItem.id ? { ...newGiftCardData, id: editingItem.id } : card)),
-      )
-      setEditingItem(null)
-    } else {
-      setGiftCardsList([...giftCardsList, newGiftCardData])
-    }
-
-    resetGiftCardForm()
-  }
-
-  const handleDeleteBrand = (brandId: string) => {
-    if (confirm("Are you sure you want to delete this brand?")) {
-      setBrands(brands.filter((brand) => brand.id !== brandId))
-    }
-  }
-
-  const handleDeleteCoupon = (couponId: string) => {
-    if (confirm("Are you sure you want to delete this coupon?")) {
-      setCoupons(coupons.filter((coupon) => coupon.id !== couponId))
-    }
-  }
-
-  const handleDeleteGiftCard = (cardId: string) => {
-    if (confirm("Are you sure you want to delete this gift card?")) {
-      setGiftCardsList(giftCardsList.filter((card) => card.id !== cardId))
-    }
-  }
-
-  const handleEditBrand = (brand: any) => {
-    setEditingItem(brand)
-    setNewBrand({
-      name: brand.name,
-      logo: brand.logo,
-      description: brand.description,
-      website: "",
-    })
-    setIsAddBrandOpen(true)
-  }
-
-  const handleEditCoupon = (coupon: any) => {
-    setEditingItem(coupon)
-    setNewCoupon({
-      title: coupon.title,
-      brand: coupon.store,
-      code: coupon.code,
-      description: "",
-      expiryDays: coupon.expiryDays.toString(),
-      type: "code",
-      savings: coupon.discount,
-      category: coupon.category,
-      featured: coupon.featured,
-    })
-    setIsAddCouponOpen(true)
-  }
-
-  const handleEditGiftCard = (card: any) => {
-    setEditingItem(card)
-    setNewGiftCard({
-      name: card.name,
-      logo: card.logo,
-      description: card.description,
-      category: card.category,
-      denominations: card.denominations.join(", "),
-      minAmount: "100",
-      maxAmount: "10000",
-      cashback: card.cashback,
-      featured: card.featured,
-    })
-    setIsAddGiftCardOpen(true)
-  }
-
-  const resetBrandForm = () => {
-    setEditingItem(null)
-    setNewBrand({ name: "", logo: "", description: "", website: "" })
-    setIsAddBrandOpen(false)
-  }
-
-  const resetCouponForm = () => {
-    setEditingItem(null)
-    setNewCoupon({
-      title: "",
-      brand: "",
-      code: "",
-      description: "",
-      expiryDays: "",
-      type: "code",
-      savings: "",
-      category: "",
-      featured: false,
-    })
-    setIsAddCouponOpen(false)
-  }
-
-  const resetGiftCardForm = () => {
-    setEditingItem(null)
-    setNewGiftCard({
-      name: "",
-      logo: "",
-      description: "",
-      category: "",
-      denominations: "",
-      minAmount: "",
-      maxAmount: "",
-      cashback: "",
-      featured: false,
-    })
-    setIsAddGiftCardOpen(false)
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Sidebar */}
-      <div className="fixed inset-y-0 left-0 w-64 bg-white shadow-lg">
-        <div className="flex items-center justify-center h-16 border-b">
-          <div className="flex items-center space-x-3">
-            <Image src="/logo.png" alt="Fayeda Club" width={32} height={32} className="rounded" />
-            <h1 className="text-xl font-bold bg-gradient-to-r from-yellow-500 to-red-500 bg-clip-text text-transparent">
-              Fayeda Club
-            </h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Header */}
+      <div className="bg-white border-b shadow-sm">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Admin Dashboard
+              </h1>
+              <p className="text-gray-600 mt-1">Manage your platform efficiently</p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Button variant="outline" size="sm">
+                <Download className="w-4 h-4 mr-2" />
+                Export Data
+              </Button>
+              <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                <Plus className="w-4 h-4 mr-2" />
+                Add New
+              </Button>
+            </div>
           </div>
-        </div>
-        <nav className="mt-8">
-          <div className="px-4 space-y-2">
-            <button
-              onClick={() => setActiveTab("overview")}
-              className={`w-full flex items-center px-4 py-2 text-left rounded-lg transition-colors ${
-                activeTab === "overview" ? "bg-orange-100 text-orange-700" : "text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              <BarChart3 className="h-5 w-5 mr-3" />
-              Overview
-            </button>
-            <button
-              onClick={() => setActiveTab("brands")}
-              className={`w-full flex items-center px-4 py-2 text-left rounded-lg transition-colors ${
-                activeTab === "brands" ? "bg-orange-100 text-orange-700" : "text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              <Package className="h-5 w-5 mr-3" />
-              Brands
-            </button>
-            <button
-              onClick={() => setActiveTab("coupons")}
-              className={`w-full flex items-center px-4 py-2 text-left rounded-lg transition-colors ${
-                activeTab === "coupons" ? "bg-orange-100 text-orange-700" : "text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              <Tag className="h-5 w-5 mr-3" />
-              Coupons
-            </button>
-            <button
-              onClick={() => setActiveTab("giftcards")}
-              className={`w-full flex items-center px-4 py-2 text-left rounded-lg transition-colors ${
-                activeTab === "giftcards" ? "bg-orange-100 text-orange-700" : "text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              <Gift className="h-5 w-5 mr-3" />
-              Gift Cards
-            </button>
-            <Link
-              href="/"
-              className="w-full flex items-center px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <Home className="h-5 w-5 mr-3" />
-              View Website
-            </Link>
-          </div>
-        </nav>
-        <div className="absolute bottom-4 left-4 right-4">
-          <Button variant="outline" className="w-full bg-transparent">
-            <LogOut className="h-4 w-4 mr-2" />
-            Sign Out
-          </Button>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="ml-64">
-        {/* Header */}
-        <header className="bg-white shadow-sm border-b h-16 flex items-center justify-between px-6">
-          <h2 className="text-2xl font-bold text-gray-900 capitalize">{activeTab}</h2>
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                type="text"
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 w-64"
-              />
-            </div>
-            <Button variant="outline" size="sm">
-              <Settings className="h-4 w-4" />
-            </Button>
+      <div className="container mx-auto px-6 py-8">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {stats.map((stat, index) => (
+            <Card
+              key={index}
+              className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+            >
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 mb-1">{stat.title}</p>
+                    <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+                    <p className="text-sm text-green-600 font-medium mt-1">{stat.change} from last month</p>
+                  </div>
+                  <div
+                    className={`w-12 h-12 rounded-full bg-gradient-to-r ${stat.color} flex items-center justify-center`}
+                  >
+                    <stat.icon className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Navigation Tabs */}
+        <div className="mb-8">
+          <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
+            {[
+              { id: "overview", label: "Overview", icon: BarChart3 },
+              { id: "orders", label: "Orders", icon: ShoppingBag },
+              { id: "gift-cards", label: "Gift Cards", icon: Gift },
+              { id: "stores", label: "Stores", icon: ShoppingBag },
+              { id: "users", label: "Users", icon: Users },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                  activeTab === tab.id
+                    ? "bg-white text-blue-600 shadow-sm"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
+                }`}
+              >
+                <tab.icon className="w-4 h-4" />
+                <span>{tab.label}</span>
+              </button>
+            ))}
           </div>
-        </header>
+        </div>
 
-        {/* Content */}
-        <main className="p-6">
-          {activeTab === "overview" && (
-            <div className="space-y-6">
-              {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Brands</CardTitle>
-                    <Package className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{brands.length}</div>
-                    <p className="text-xs text-muted-foreground">Active partners</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Coupons</CardTitle>
-                    <Tag className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{coupons.length}</div>
-                    <p className="text-xs text-muted-foreground">All coupons</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Gift Cards</CardTitle>
-                    <Gift className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{giftCardsList.length}</div>
-                    <p className="text-xs text-muted-foreground">Available cards</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Active Users</CardTitle>
-                    <BarChart3 className="h-4 w-4 text-green-600" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-green-600">50,000+</div>
-                    <p className="text-xs text-muted-foreground">Registered users</p>
-                  </CardContent>
-                </Card>
-              </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-8">
+            {activeTab === "overview" && (
+              <>
+                {/* Charts Section */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card className="border-0 shadow-lg">
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2">
+                        <LineChart className="w-5 h-5 text-blue-600" />
+                        <span>Revenue Trend</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-64 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg flex items-center justify-center">
+                        <div className="text-center">
+                          <TrendingUp className="w-12 h-12 text-blue-600 mx-auto mb-4" />
+                          <p className="text-gray-600">Revenue Chart</p>
+                          <p className="text-sm text-gray-500">Interactive chart would go here</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
 
-              {/* Recent Activity */}
-              <div className="grid lg:grid-cols-2 gap-6">
-                <Card>
+                  <Card className="border-0 shadow-lg">
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2">
+                        <PieChart className="w-5 h-5 text-green-600" />
+                        <span>Category Distribution</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-64 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg flex items-center justify-center">
+                        <div className="text-center">
+                          <Target className="w-12 h-12 text-green-600 mx-auto mb-4" />
+                          <p className="text-gray-600">Category Chart</p>
+                          <p className="text-sm text-gray-500">Pie chart would go here</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Recent Orders */}
+                <Card className="border-0 shadow-lg">
                   <CardHeader>
-                    <CardTitle>Recent Brands</CardTitle>
-                    <CardDescription>Latest brands added to the platform</CardDescription>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="flex items-center space-x-2">
+                        <ShoppingBag className="w-5 h-5 text-purple-600" />
+                        <span>Recent Orders</span>
+                      </CardTitle>
+                      <Button variant="outline" size="sm">
+                        <Eye className="w-4 h-4 mr-2" />
+                        View All
+                      </Button>
+                    </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      {brands.slice(0, 5).map((brand) => (
-                        <div key={brand.id} className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <Image
-                              src={brand.logo || "/placeholder.svg"}
-                              alt={brand.name}
-                              width={32}
-                              height={32}
-                              className="rounded"
-                            />
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Customer</TableHead>
+                            <TableHead>Product</TableHead>
+                            <TableHead>Amount</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Date</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {recentOrders.map((order) => (
+                            <TableRow key={order.id} className="hover:bg-gray-50">
+                              <TableCell>
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                                    <span className="text-white text-sm font-medium">{order.customer.charAt(0)}</span>
+                                  </div>
+                                  <div>
+                                    <p className="font-medium text-gray-900">{order.customer}</p>
+                                    <p className="text-sm text-gray-500">{order.email}</p>
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell className="font-medium">{order.product}</TableCell>
+                              <TableCell className="font-semibold text-green-600">{order.amount}</TableCell>
+                              <TableCell>{getStatusBadge(order.status)}</TableCell>
+                              <TableCell className="text-gray-500">{order.date}</TableCell>
+                              <TableCell className="text-right">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="sm">
+                                      <MoreHorizontal className="w-4 h-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem>
+                                      <Eye className="w-4 h-4 mr-2" />
+                                      View Details
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                      <Edit className="w-4 h-4 mr-2" />
+                                      Edit Order
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem className="text-red-600">
+                                      <Trash2 className="w-4 h-4 mr-2" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            )}
+
+            {activeTab === "gift-cards" && (
+              <Card className="border-0 shadow-lg">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center space-x-2">
+                      <Gift className="w-5 h-5 text-purple-600" />
+                      <span>Gift Cards Management</span>
+                    </CardTitle>
+                    <div className="flex items-center space-x-2">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <Input placeholder="Search gift cards..." className="pl-10 w-64" />
+                      </div>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+                            <Plus className="w-4 h-4 mr-2" />
+                            Add Gift Card
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-md">
+                          <DialogHeader>
+                            <DialogTitle>Add New Gift Card</DialogTitle>
+                            <DialogDescription>Create a new gift card for your platform</DialogDescription>
+                          </DialogHeader>
+                          <div className="space-y-4">
                             <div>
-                              <p className="font-medium">{brand.name}</p>
-                              <p className="text-sm text-gray-500">{brand.totalCoupons} coupons</p>
+                              <Label htmlFor="name">Gift Card Name</Label>
+                              <Input id="name" placeholder="e.g., Amazon Gift Card" />
                             </div>
-                          </div>
-                          <Badge variant="secondary">Active</Badge>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Recent Coupons</CardTitle>
-                    <CardDescription>Latest coupons added to the platform</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {coupons.slice(0, 5).map((coupon) => (
-                        <div key={coupon.id} className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium">{coupon.title}</p>
-                            <p className="text-sm text-gray-500">{coupon.store}</p>
-                          </div>
-                          <Badge variant={coupon.expiryDays <= 3 ? "destructive" : "secondary"}>
-                            {coupon.expiryDays <= 3 ? "Expiring" : "Active"}
-                          </Badge>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          )}
-
-          {activeTab === "brands" && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Manage Brands ({brands.length})</h3>
-                <Dialog open={isAddBrandOpen} onOpenChange={setIsAddBrandOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Brand
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>{editingItem ? "Edit Brand" : "Add New Brand"}</DialogTitle>
-                      <DialogDescription>
-                        {editingItem ? "Update brand information" : "Add a new brand to the Fayeda Club platform"}
-                      </DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={handleAddBrand} className="space-y-4">
-                      <div>
-                        <Label htmlFor="brandName">Brand Name</Label>
-                        <Input
-                          id="brandName"
-                          value={newBrand.name}
-                          onChange={(e) => setNewBrand({ ...newBrand, name: e.target.value })}
-                          placeholder="Enter brand name"
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="brandDescription">Description</Label>
-                        <Textarea
-                          id="brandDescription"
-                          value={newBrand.description}
-                          onChange={(e) => setNewBrand({ ...newBrand, description: e.target.value })}
-                          placeholder="Enter brand description"
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="brandWebsite">Website URL</Label>
-                        <Input
-                          id="brandWebsite"
-                          value={newBrand.website}
-                          onChange={(e) => setNewBrand({ ...newBrand, website: e.target.value })}
-                          placeholder="https://example.com"
-                          type="url"
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="brandLogo">Logo</Label>
-                        <div className="flex items-center space-x-4">
-                          {newBrand.logo && (
-                            <div className="relative">
-                              <Image
-                                src={newBrand.logo || "/placeholder.svg"}
-                                alt="Logo preview"
-                                width={64}
-                                height={64}
-                                className="rounded border"
-                              />
-                              <Button
-                                type="button"
-                                variant="destructive"
-                                size="sm"
-                                className="absolute -top-2 -right-2 h-6 w-6 p-0"
-                                onClick={() => setNewBrand({ ...newBrand, logo: "" })}
-                              >
-                                <X className="h-3 w-3" />
-                              </Button>
+                            <div>
+                              <Label htmlFor="category">Category</Label>
+                              <Select>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select category" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="ecommerce">E-commerce</SelectItem>
+                                  <SelectItem value="fashion">Fashion</SelectItem>
+                                  <SelectItem value="beauty">Beauty</SelectItem>
+                                  <SelectItem value="food">Food & Dining</SelectItem>
+                                </SelectContent>
+                              </Select>
                             </div>
-                          )}
-                          <div>
-                            <Input
-                              id="brandLogo"
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0]
-                                if (file) handleImageUpload(file, "brand")
-                              }}
-                              disabled={uploadingImage}
-                            />
-                            <p className="text-xs text-gray-500 mt-1">Upload brand logo</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex space-x-2">
-                        <Button type="submit" className="flex-1" disabled={uploadingImage}>
-                          {uploadingImage ? "Processing..." : editingItem ? "Update Brand" : "Add Brand"}
-                        </Button>
-                        <Button type="button" variant="outline" onClick={resetBrandForm}>
-                          Cancel
-                        </Button>
-                      </div>
-                    </form>
-                  </DialogContent>
-                </Dialog>
-              </div>
-
-              <Card>
-                <CardContent className="p-0">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Brand</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead>Category</TableHead>
-                        <TableHead>Coupons</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {brands
-                        .filter(
-                          (brand) =>
-                            brand.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            brand.description.toLowerCase().includes(searchQuery.toLowerCase()),
-                        )
-                        .map((brand) => (
-                          <TableRow key={brand.id}>
-                            <TableCell>
-                              <div className="flex items-center space-x-3">
-                                <Image
-                                  src={brand.logo || "/placeholder.svg"}
-                                  alt={brand.name}
-                                  width={40}
-                                  height={40}
-                                  className="rounded"
-                                />
-                                <span className="font-medium">{brand.name}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="max-w-xs truncate">{brand.description}</TableCell>
-                            <TableCell>{brand.category}</TableCell>
-                            <TableCell>{brand.totalCoupons}</TableCell>
-                            <TableCell>
-                              <Badge variant="secondary">Active</Badge>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="sm">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => handleEditBrand(brand)}>
-                                    <Edit className="h-4 w-4 mr-2" />
-                                    Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    className="text-red-600"
-                                    onClick={() => handleDeleteBrand(brand.id)}
-                                  >
-                                    <Trash2 className="h-4 w-4 mr-2" />
-                                    Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {activeTab === "coupons" && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Manage Coupons ({coupons.length})</h3>
-                <Dialog open={isAddCouponOpen} onOpenChange={setIsAddCouponOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Coupon
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle>{editingItem ? "Edit Coupon" : "Add New Coupon"}</DialogTitle>
-                      <DialogDescription>
-                        {editingItem ? "Update coupon information" : "Add a new coupon to the selected brand"}
-                      </DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={handleAddCoupon} className="space-y-4">
-                      <div>
-                        <Label htmlFor="couponTitle">Coupon Title</Label>
-                        <Input
-                          id="couponTitle"
-                          value={newCoupon.title}
-                          onChange={(e) => setNewCoupon({ ...newCoupon, title: e.target.value })}
-                          placeholder="Enter coupon title"
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="couponBrand">Brand</Label>
-                        <Select
-                          value={newCoupon.brand}
-                          onValueChange={(value) => setNewCoupon({ ...newCoupon, brand: value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select brand" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {brands.map((brand) => (
-                              <SelectItem key={brand.id} value={brand.name}>
-                                {brand.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="couponCode">Coupon Code</Label>
-                        <Input
-                          id="couponCode"
-                          value={newCoupon.code}
-                          onChange={(e) => setNewCoupon({ ...newCoupon, code: e.target.value })}
-                          placeholder="Enter coupon code"
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="couponSavings">Savings</Label>
-                        <Input
-                          id="couponSavings"
-                          value={newCoupon.savings}
-                          onChange={(e) => setNewCoupon({ ...newCoupon, savings: e.target.value })}
-                          placeholder="e.g., Up to ₹1,000"
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="couponCategory">Category</Label>
-                        <Select
-                          value={newCoupon.category}
-                          onValueChange={(value) => setNewCoupon({ ...newCoupon, category: value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select category" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Electronics">Electronics</SelectItem>
-                            <SelectItem value="Fashion">Fashion</SelectItem>
-                            <SelectItem value="Food & Dining">Food & Dining</SelectItem>
-                            <SelectItem value="Travel">Travel</SelectItem>
-                            <SelectItem value="Health & Beauty">Health & Beauty</SelectItem>
-                            <SelectItem value="Home & Garden">Home & Garden</SelectItem>
-                            <SelectItem value="Entertainment">Entertainment</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="couponExpiry">Expiry (Days from now)</Label>
-                        <Input
-                          id="couponExpiry"
-                          type="number"
-                          value={newCoupon.expiryDays}
-                          onChange={(e) => setNewCoupon({ ...newCoupon, expiryDays: e.target.value })}
-                          placeholder="30"
-                          min="1"
-                          required
-                        />
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id="couponFeatured"
-                          checked={newCoupon.featured}
-                          onChange={(e) => setNewCoupon({ ...newCoupon, featured: e.target.checked })}
-                          className="rounded"
-                        />
-                        <Label htmlFor="couponFeatured">Featured Coupon</Label>
-                      </div>
-
-                      <div className="flex space-x-2">
-                        <Button type="submit" className="flex-1">
-                          {editingItem ? "Update Coupon" : "Add Coupon"}
-                        </Button>
-                        <Button type="button" variant="outline" onClick={resetCouponForm}>
-                          Cancel
-                        </Button>
-                      </div>
-                    </form>
-                  </DialogContent>
-                </Dialog>
-              </div>
-
-              <Card>
-                <CardContent className="p-0">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Title</TableHead>
-                        <TableHead>Brand</TableHead>
-                        <TableHead>Code</TableHead>
-                        <TableHead>Discount</TableHead>
-                        <TableHead>Category</TableHead>
-                        <TableHead>Expiry</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {coupons
-                        .filter(
-                          (coupon) =>
-                            coupon.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            coupon.store.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            coupon.category.toLowerCase().includes(searchQuery.toLowerCase()),
-                        )
-                        .map((coupon) => (
-                          <TableRow key={coupon.id}>
-                            <TableCell className="font-medium max-w-xs">
+                            <div className="grid grid-cols-2 gap-4">
                               <div>
-                                <div className="truncate">{coupon.title}</div>
-                                {coupon.featured && (
-                                  <Badge variant="secondary" className="mt-1 text-xs">
-                                    Featured
-                                  </Badge>
-                                )}
+                                <Label htmlFor="min-price">Min Price</Label>
+                                <Input id="min-price" placeholder="₹100" />
                               </div>
-                            </TableCell>
-                            <TableCell>{coupon.store}</TableCell>
-                            <TableCell>
-                              <code className="bg-gray-100 px-2 py-1 rounded text-sm">{coupon.code}</code>
-                            </TableCell>
-                            <TableCell className="text-green-600 font-medium">{coupon.discount}</TableCell>
-                            <TableCell>
-                              <Badge variant="outline">{coupon.category}</Badge>
-                            </TableCell>
-                            <TableCell>{coupon.expiryDays}d</TableCell>
-                            <TableCell>
-                              <Badge variant={coupon.expiryDays <= 3 ? "destructive" : "secondary"}>
-                                {coupon.expiryDays <= 3 ? "Expiring" : "Active"}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="sm">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => handleEditCoupon(coupon)}>
-                                    <Edit className="h-4 w-4 mr-2" />
-                                    Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    className="text-red-600"
-                                    onClick={() => handleDeleteCoupon(coupon.id)}
-                                  >
-                                    <Trash2 className="h-4 w-4 mr-2" />
-                                    Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                    </TableBody>
-                  </Table>
+                              <div>
+                                <Label htmlFor="max-price">Max Price</Label>
+                                <Input id="max-price" placeholder="₹10,000" />
+                              </div>
+                            </div>
+                            <div>
+                              <Label htmlFor="discount">Discount %</Label>
+                              <Input id="discount" placeholder="5" />
+                            </div>
+                            <div>
+                              <Label htmlFor="description">Description</Label>
+                              <Textarea id="description" placeholder="Gift card description..." />
+                            </div>
+                            <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+                              Create Gift Card
+                            </Button>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {giftCards.map((card) => (
+                      <Card
+                        key={card.id}
+                        className="border border-gray-200 hover:shadow-lg transition-all duration-300"
+                      >
+                        <CardContent className="p-6">
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                                <Gift className="w-6 h-6 text-purple-600" />
+                              </div>
+                              <div>
+                                <h3 className="font-semibold text-gray-900">{card.name}</h3>
+                                <p className="text-sm text-gray-500">{card.category}</p>
+                              </div>
+                            </div>
+                            {getStatusBadge(card.status)}
+                          </div>
+
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-gray-600">Price Range</span>
+                              <span className="font-medium">{card.price}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-gray-600">Discount</span>
+                              <Badge className="bg-green-100 text-green-800">{card.discount}</Badge>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-gray-600">Sales</span>
+                              <span className="font-medium">{card.sales}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-gray-600">Rating</span>
+                              <div className="flex items-center space-x-1">
+                                <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                                <span className="font-medium">{card.rating}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center space-x-2 mt-4 pt-4 border-t">
+                            <Button variant="outline" size="sm" className="flex-1 bg-transparent">
+                              <Edit className="w-4 h-4 mr-2" />
+                              Edit
+                            </Button>
+                            <Button variant="outline" size="sm" className="flex-1 bg-transparent">
+                              <Eye className="w-4 h-4 mr-2" />
+                              View
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-red-600 hover:text-red-700 bg-transparent"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
-            </div>
-          )}
+            )}
 
-          {activeTab === "giftcards" && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Manage Gift Cards ({giftCardsList.length})</h3>
-                <Dialog open={isAddGiftCardOpen} onOpenChange={setIsAddGiftCardOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Gift Card
+            {activeTab === "stores" && (
+              <Card className="border-0 shadow-lg">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center space-x-2">
+                      <ShoppingBag className="w-5 h-5 text-blue-600" />
+                      <span>Partner Stores</span>
+                    </CardTitle>
+                    <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Store
                     </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle>{editingItem ? "Edit Gift Card" : "Add New Gift Card"}</DialogTitle>
-                      <DialogDescription>
-                        {editingItem ? "Update gift card information" : "Add a new gift card to the platform"}
-                      </DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={handleAddGiftCard} className="space-y-4">
-                      <div>
-                        <Label htmlFor="giftCardName">Gift Card Name</Label>
-                        <Input
-                          id="giftCardName"
-                          value={newGiftCard.name}
-                          onChange={(e) => setNewGiftCard({ ...newGiftCard, name: e.target.value })}
-                          placeholder="Enter gift card name"
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="giftCardDescription">Description</Label>
-                        <Textarea
-                          id="giftCardDescription"
-                          value={newGiftCard.description}
-                          onChange={(e) => setNewGiftCard({ ...newGiftCard, description: e.target.value })}
-                          placeholder="Enter gift card description"
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="giftCardCategory">Category</Label>
-                        <Select
-                          value={newGiftCard.category}
-                          onValueChange={(value) => setNewGiftCard({ ...newGiftCard, category: value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select category" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="E-commerce">E-commerce</SelectItem>
-                            <SelectItem value="Fashion">Fashion</SelectItem>
-                            <SelectItem value="Food & Dining">Food & Dining</SelectItem>
-                            <SelectItem value="Travel">Travel</SelectItem>
-                            <SelectItem value="Beauty">Beauty</SelectItem>
-                            <SelectItem value="Entertainment">Entertainment</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="giftCardDenominations">Denominations (comma-separated)</Label>
-                        <Input
-                          id="giftCardDenominations"
-                          value={newGiftCard.denominations}
-                          onChange={(e) => setNewGiftCard({ ...newGiftCard, denominations: e.target.value })}
-                          placeholder="100, 250, 500, 1000, 2000"
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="giftCardCashback">Cashback</Label>
-                        <Input
-                          id="giftCardCashback"
-                          value={newGiftCard.cashback}
-                          onChange={(e) => setNewGiftCard({ ...newGiftCard, cashback: e.target.value })}
-                          placeholder="2%"
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="giftCardLogo">Logo</Label>
-                        <div className="flex items-center space-x-4">
-                          {newGiftCard.logo && (
-                            <div className="relative">
-                              <Image
-                                src={newGiftCard.logo || "/placeholder.svg"}
-                                alt="Logo preview"
-                                width={64}
-                                height={64}
-                                className="rounded border"
-                              />
-                              <Button
-                                type="button"
-                                variant="destructive"
-                                size="sm"
-                                className="absolute -top-2 -right-2 h-6 w-6 p-0"
-                                onClick={() => setNewGiftCard({ ...newGiftCard, logo: "" })}
-                              >
-                                <X className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          )}
-                          <div>
-                            <Input
-                              id="giftCardLogo"
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0]
-                                if (file) handleImageUpload(file, "giftcard")
-                              }}
-                              disabled={uploadingImage}
-                            />
-                            <p className="text-xs text-gray-500 mt-1">Upload gift card logo</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id="giftCardFeatured"
-                          checked={newGiftCard.featured}
-                          onChange={(e) => setNewGiftCard({ ...newGiftCard, featured: e.target.checked })}
-                          className="rounded"
-                        />
-                        <Label htmlFor="giftCardFeatured">Featured Gift Card</Label>
-                      </div>
-
-                      <div className="flex space-x-2">
-                        <Button type="submit" className="flex-1" disabled={uploadingImage}>
-                          {uploadingImage ? "Processing..." : editingItem ? "Update Gift Card" : "Add Gift Card"}
-                        </Button>
-                        <Button type="button" variant="outline" onClick={resetGiftCardForm}>
-                          Cancel
-                        </Button>
-                      </div>
-                    </form>
-                  </DialogContent>
-                </Dialog>
-              </div>
-
-              <Card>
-                <CardContent className="p-0">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Gift Card</TableHead>
-                        <TableHead>Category</TableHead>
-                        <TableHead>Denominations</TableHead>
-                        <TableHead>Cashback</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {giftCardsList
-                        .filter(
-                          (card) =>
-                            card.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            card.category.toLowerCase().includes(searchQuery.toLowerCase()),
-                        )
-                        .map((card) => (
-                          <TableRow key={card.id}>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Store</TableHead>
+                          <TableHead>Category</TableHead>
+                          <TableHead>Commission</TableHead>
+                          <TableHead>Orders</TableHead>
+                          <TableHead>Revenue</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {stores.map((store) => (
+                          <TableRow key={store.id} className="hover:bg-gray-50">
                             <TableCell>
                               <div className="flex items-center space-x-3">
-                                <Image
-                                  src={card.logo || "/placeholder.svg"}
-                                  alt={card.name}
-                                  width={40}
-                                  height={40}
-                                  className="rounded"
-                                />
+                                <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                                  <ShoppingBag className="w-5 h-5 text-blue-600" />
+                                </div>
                                 <div>
-                                  <div className="font-medium">{card.name}</div>
-                                  {card.featured && (
-                                    <Badge variant="secondary" className="mt-1 text-xs">
-                                      Featured
-                                    </Badge>
-                                  )}
+                                  <p className="font-medium text-gray-900">{store.name}</p>
                                 </div>
                               </div>
                             </TableCell>
                             <TableCell>
-                              <Badge variant="outline">{card.category}</Badge>
+                              <Badge variant="outline">{store.category}</Badge>
                             </TableCell>
-                            <TableCell>
-                              ₹{Math.min(...card.denominations)} - ₹{Math.max(...card.denominations)}
-                            </TableCell>
-                            <TableCell className="text-green-600 font-medium">{card.cashback}</TableCell>
-                            <TableCell>
-                              <Badge variant="secondary">Active</Badge>
-                            </TableCell>
+                            <TableCell className="font-medium text-green-600">{store.commission}</TableCell>
+                            <TableCell className="font-medium">{store.orders}</TableCell>
+                            <TableCell className="font-semibold text-blue-600">{store.revenue}</TableCell>
+                            <TableCell>{getStatusBadge(store.status)}</TableCell>
                             <TableCell className="text-right">
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button variant="ghost" size="sm">
-                                    <MoreHorizontal className="h-4 w-4" />
+                                    <MoreHorizontal className="w-4 h-4" />
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => handleEditGiftCard(card)}>
-                                    <Edit className="h-4 w-4 mr-2" />
-                                    Edit
+                                  <DropdownMenuItem>
+                                    <Eye className="w-4 h-4 mr-2" />
+                                    View Details
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    className="text-red-600"
-                                    onClick={() => handleDeleteGiftCard(card.id)}
-                                  >
-                                    <Trash2 className="h-4 w-4 mr-2" />
-                                    Delete
+                                  <DropdownMenuItem>
+                                    <Edit className="w-4 h-4 mr-2" />
+                                    Edit Store
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem className="text-red-600">
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Remove
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </TableCell>
                           </TableRow>
                         ))}
-                    </TableBody>
-                  </Table>
+                      </TableBody>
+                    </Table>
+                  </div>
                 </CardContent>
               </Card>
-            </div>
-          )}
-        </main>
+            )}
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Quick Actions */}
+            <Card className="border-0 shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Zap className="w-5 h-5 text-yellow-600" />
+                  <span>Quick Actions</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button className="w-full justify-start bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add New Store
+                </Button>
+                <Button variant="outline" className="w-full justify-start bg-transparent">
+                  <Gift className="w-4 h-4 mr-2" />
+                  Create Gift Card
+                </Button>
+                <Button variant="outline" className="w-full justify-start bg-transparent">
+                  <Upload className="w-4 h-4 mr-2" />
+                  Import Data
+                </Button>
+                <Button variant="outline" className="w-full justify-start bg-transparent">
+                  <Download className="w-4 h-4 mr-2" />
+                  Export Report
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Recent Activity */}
+            <Card className="border-0 shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Activity className="w-5 h-5 text-green-600" />
+                  <span>Recent Activity</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {activities.map((activity) => (
+                    <div key={activity.id} className="flex items-start space-x-3">
+                      <div
+                        className={`w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0`}
+                      >
+                        <activity.icon className={`w-4 h-4 ${activity.color}`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-900 font-medium">{activity.message}</p>
+                        <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <Button variant="outline" className="w-full mt-4 bg-transparent">
+                  <Eye className="w-4 h-4 mr-2" />
+                  View All Activity
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Performance Metrics */}
+            <Card className="border-0 shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Target className="w-5 h-5 text-orange-600" />
+                  <span>Performance</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Conversion Rate</span>
+                    <span className="font-semibold text-green-600">12.5%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full"
+                      style={{ width: "75%" }}
+                    ></div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Customer Satisfaction</span>
+                    <span className="font-semibold text-blue-600">94%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full"
+                      style={{ width: "94%" }}
+                    ></div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Revenue Growth</span>
+                    <span className="font-semibold text-purple-600">+23%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full"
+                      style={{ width: "85%" }}
+                    ></div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Notifications */}
+            <Card className="border-0 shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Bell className="w-5 h-5 text-red-600" />
+                    <span>Notifications</span>
+                  </div>
+                  <Badge className="bg-red-100 text-red-800">3</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="p-3 bg-red-50 rounded-lg border-l-4 border-red-500">
+                  <div className="flex items-center space-x-2">
+                    <AlertCircle className="w-4 h-4 text-red-600" />
+                    <span className="text-sm font-medium text-red-800">System Alert</span>
+                  </div>
+                  <p className="text-sm text-red-700 mt-1">Server maintenance scheduled for tonight</p>
+                </div>
+
+                <div className="p-3 bg-yellow-50 rounded-lg border-l-4 border-yellow-500">
+                  <div className="flex items-center space-x-2">
+                    <Clock className="w-4 h-4 text-yellow-600" />
+                    <span className="text-sm font-medium text-yellow-800">Pending Review</span>
+                  </div>
+                  <p className="text-sm text-yellow-700 mt-1">5 new store applications awaiting approval</p>
+                </div>
+
+                <div className="p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                  <div className="flex items-center space-x-2">
+                    <CheckCircle className="w-4 h-4 text-blue-600" />
+                    <span className="text-sm font-medium text-blue-800">Update Available</span>
+                  </div>
+                  <p className="text-sm text-blue-700 mt-1">New platform features ready to deploy</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     </div>
   )

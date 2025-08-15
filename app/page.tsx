@@ -1,249 +1,380 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
-import Link from "next/link"
 import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import Navbar from "@/components/navbar"
-import MobileHeader from "@/components/mobile-header"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
   Search,
-  Gift,
-  Star,
-  Clock,
-  ArrowRight,
-  Sparkles,
-  Zap,
+  Bell,
+  User,
   Heart,
   ShoppingBag,
+  TrendingUp,
+  Gift,
+  Zap,
+  Clock,
+  ArrowRight,
+  ChevronDown,
+  Menu,
+  X,
+  Copy,
+  ExternalLink,
+  Tag,
+  Percent,
   Users,
   Award,
   Target,
-  CheckCircle,
+  Sparkles,
 } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { topDealsData, getAllCoupons } from "@/lib/data"
 
 export default function HomePage() {
-  const [timeLeft, setTimeLeft] = useState({
-    hours: 23,
-    minutes: 45,
-    seconds: 30,
-  })
+  const [searchQuery, setSearchQuery] = useState("")
+  const [wishlist, setWishlist] = useState<number[]>([])
+  const [copiedCode, setCopiedCode] = useState("")
+  const [currentDealIndex, setCurrentDealIndex] = useState(0)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [notifications, setNotifications] = useState(3)
+  const router = useRouter()
 
+  const allCoupons = getAllCoupons()
+  const featuredCoupons = allCoupons.filter((coupon) => coupon.featured).slice(0, 6)
+
+  // Auto-rotate deals carousel
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev.seconds > 0) {
-          return { ...prev, seconds: prev.seconds - 1 }
-        } else if (prev.minutes > 0) {
-          return { ...prev, minutes: prev.minutes - 1, seconds: 59 }
-        } else if (prev.hours > 0) {
-          return { hours: prev.hours - 1, minutes: 59, seconds: 59 }
-        }
-        return prev
-      })
-    }, 1000)
-
+      setCurrentDealIndex((prev) => (prev + 1) % topDealsData.length)
+    }, 5000)
     return () => clearInterval(timer)
   }, [])
 
-  const topDeals = [
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
+    }
+  }
+
+  const toggleWishlist = (id: number) => {
+    setWishlist((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]))
+  }
+
+  const handleCopyCode = (code: string) => {
+    navigator.clipboard.writeText(code)
+    setCopiedCode(code)
+    setTimeout(() => setCopiedCode(""), 2000)
+  }
+
+  const handleShopNow = (url: string, storeName: string) => {
+    // Track click analytics
+    console.log(`User clicked shop now for ${storeName}`)
+    window.open(url, "_blank", "noopener,noreferrer")
+  }
+
+  const categories = [
     {
-      id: 1,
-      store: "Amazon",
-      logo: "/amazon-logo.png",
-      title: "Flat 50% Off on Electronics",
-      description: "Get amazing discounts on smartphones, laptops, and more",
-      discount: "Up to ₹15,000",
-      code: "ELECTRONICS50",
-      category: "Electronics",
-      rating: 4.8,
-      users: "2.5K",
-      timeLeft: "2 days",
-      featured: true,
+      name: "Electronics",
+      icon: "📱",
+      image: "/electronics/smartphones.png",
+      deals: 32,
+      color: "from-blue-500 to-cyan-500",
+      link: "/category/electronics",
     },
     {
-      id: 2,
-      store: "Myntra",
-      logo: "/myntra-logo.png",
-      title: "Fashion Sale - Up to 60% Off",
-      description: "Trendy clothes, shoes, and accessories at unbeatable prices",
-      discount: "Up to ₹3,000",
-      code: "FASHION60",
-      category: "Fashion",
-      rating: 4.6,
-      users: "1.8K",
-      timeLeft: "5 hours",
-      featured: true,
+      name: "Fashion",
+      icon: "👗",
+      image: "/fashion/womens-clothing.png",
+      deals: 45,
+      color: "from-pink-500 to-purple-500",
+      link: "/category/fashion",
     },
     {
-      id: 3,
-      store: "Flipkart",
-      logo: "/flipkart-logo.png",
-      title: "Big Billion Days Sale",
-      description: "Mega sale on all categories with extra cashback",
-      discount: "Up to ₹20,000",
-      code: "BIGBILLION70",
-      category: "Electronics",
-      rating: 4.7,
-      users: "3.2K",
-      timeLeft: "1 day",
-      featured: true,
+      name: "Food & Dining",
+      icon: "🍕",
+      image: "/food/pizza-fastfood.png",
+      deals: 28,
+      color: "from-orange-500 to-red-500",
+      link: "/category/food-dining",
     },
     {
-      id: 4,
-      store: "Nykaa",
-      logo: "/nykaa-logo.png",
-      title: "Beauty Bonanza - 40% Off",
-      description: "Premium beauty products at amazing prices",
-      discount: "Up to ₹2,500",
-      code: "BEAUTY40",
-      category: "Beauty",
-      rating: 4.5,
-      users: "950",
-      timeLeft: "3 days",
-      featured: false,
+      name: "Travel",
+      icon: "✈️",
+      image: "/travel/flights.png",
+      deals: 19,
+      color: "from-green-500 to-teal-500",
+      link: "/category/travel",
+    },
+    {
+      name: "Health & Beauty",
+      icon: "💄",
+      image: "/beauty/makeup.png",
+      deals: 24,
+      color: "from-rose-500 to-pink-500",
+      link: "/category/health-beauty",
+    },
+    {
+      name: "Home & Garden",
+      icon: "🏠",
+      image: "/home/home-decor.png",
+      deals: 16,
+      color: "from-amber-500 to-orange-500",
+      link: "/category/home-garden",
     },
   ]
 
   const featuredStores = [
-    {
-      name: "Amazon",
-      logo: "/amazon-logo.png",
-      description: "World's largest online marketplace",
-      category: "E-commerce",
-      rating: 4.8,
-      totalCoupons: 25,
-      cashback: "2%",
-    },
-    {
-      name: "Myntra",
-      logo: "/myntra-logo.png",
-      description: "India's leading fashion destination",
-      category: "Fashion",
-      rating: 4.6,
-      totalCoupons: 18,
-      cashback: "3%",
-    },
-    {
-      name: "Flipkart",
-      logo: "/flipkart-logo.png",
-      description: "India's leading e-commerce platform",
-      category: "E-commerce",
-      rating: 4.5,
-      totalCoupons: 22,
-      cashback: "1.5%",
-    },
-    {
-      name: "Nykaa",
-      logo: "/nykaa-logo.png",
-      description: "Beauty and wellness products",
-      category: "Beauty",
-      rating: 4.4,
-      totalCoupons: 15,
-      cashback: "2.5%",
-    },
-  ]
-
-  const categories = [
-    { name: "Electronics", icon: "📱", deals: 45, image: "/electronics/smartphones.png" },
-    { name: "Fashion", icon: "👗", deals: 38, image: "/fashion/womens-clothing.png" },
-    { name: "Food & Dining", icon: "🍕", deals: 52, image: "/food/pizza-fastfood.png" },
-    { name: "Travel", icon: "✈️", deals: 28, image: "/travel/flights.png" },
-    { name: "Beauty", icon: "💄", deals: 33, image: "/beauty/makeup.png" },
-    { name: "Home & Garden", icon: "🏠", deals: 41, image: "/home/home-decor.png" },
-  ]
-
-  const stats = [
-    { label: "Active Users", value: "50K+", icon: Users, color: "from-blue-500 to-cyan-500" },
-    { label: "Total Savings", value: "₹2.5Cr+", icon: Target, color: "from-green-500 to-emerald-500" },
-    { label: "Partner Stores", value: "500+", icon: ShoppingBag, color: "from-purple-500 to-pink-500" },
-    { label: "Happy Customers", value: "98%", icon: Award, color: "from-orange-500 to-red-500" },
+    { name: "Amazon", logo: "/amazon-logo.png", cashback: "Up to 50%", url: "https://amazon.in" },
+    { name: "Myntra", logo: "/myntra-logo.png", cashback: "Up to 60%", url: "https://myntra.com" },
+    { name: "Flipkart", logo: "/flipkart-logo.png", cashback: "Up to 70%", url: "https://flipkart.com" },
+    { name: "Zomato", logo: "/generic-food-delivery-logo.png", cashback: "Up to 50%", url: "https://zomato.com" },
+    { name: "Nykaa", logo: "/nykaa-logo.png", cashback: "Up to 40%", url: "https://nykaa.com" },
+    { name: "Swiggy", logo: "/generic-food-delivery-logo.png", cashback: "Up to 60%", url: "https://swiggy.com" },
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Navigation */}
-      <div className="hidden lg:block">
-        <Navbar />
-      </div>
-      <div className="lg:hidden">
-        <MobileHeader />
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+      {/* Enhanced Navbar */}
+      <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo */}
+            <Link href="/" className="flex items-center space-x-3 group">
+              <div className="relative">
+                <Image
+                  src="/logo.png"
+                  alt="Fayeda Club"
+                  width={40}
+                  height={40}
+                  className="rounded-xl group-hover:scale-110 transition-transform duration-300"
+                />
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 bg-clip-text text-transparent">
+                  Fayeda Club
+                </h1>
+                <p className="text-xs text-gray-500 -mt-1">Save More, Spend Less</p>
+              </div>
+            </Link>
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white">
-        <div className="absolute inset-0 bg-black/20"></div>
-        <div className="absolute inset-0">
-          <div className="absolute top-10 left-10 w-20 h-20 bg-white/10 rounded-full animate-float"></div>
-          <div
-            className="absolute top-32 right-20 w-16 h-16 bg-white/10 rounded-full animate-float"
-            style={{ animationDelay: "1s" }}
-          ></div>
-          <div
-            className="absolute bottom-20 left-1/4 w-12 h-12 bg-white/10 rounded-full animate-float"
-            style={{ animationDelay: "2s" }}
-          ></div>
-        </div>
-
-        <div className="relative container mx-auto px-4 py-20">
-          <div className="max-w-4xl mx-auto text-center">
-            <div className="mb-6">
-              <Badge className="bg-white/20 text-white border-white/30 mb-4">
-                <Sparkles className="w-4 h-4 mr-2" />
-                India's #1 Cashback Platform
-              </Badge>
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center space-x-8">
+              <Link href="/categories" className="text-gray-700 hover:text-orange-600 font-medium transition-colors">
+                Categories
+              </Link>
+              <Link href="/stores" className="text-gray-700 hover:text-orange-600 font-medium transition-colors">
+                Stores
+              </Link>
+              <Link href="/gift-cards" className="text-gray-700 hover:text-orange-600 font-medium transition-colors">
+                Gift Cards
+              </Link>
+              <Link href="/deals" className="text-gray-700 hover:text-orange-600 font-medium transition-colors">
+                Hot Deals
+              </Link>
             </div>
 
-            <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-              Save More with
+            {/* Enhanced Search Bar */}
+            <div className="hidden md:flex flex-1 max-w-md mx-8">
+              <form onSubmit={handleSearch} className="relative w-full group">
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-pink-400 rounded-full blur opacity-25 group-hover:opacity-40 transition-opacity"></div>
+                <div className="relative flex">
+                  <Input
+                    type="text"
+                    placeholder="Search deals, stores, categories..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="flex-1 pl-4 pr-12 py-2 bg-white/90 backdrop-blur-sm border-gray-200 rounded-l-full focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  />
+                  <Button
+                    type="submit"
+                    className="px-6 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 rounded-r-full border-0"
+                  >
+                    <Search className="h-4 w-4" />
+                  </Button>
+                </div>
+              </form>
+            </div>
+
+            {/* User Actions */}
+            <div className="flex items-center space-x-4">
+              {/* Notifications */}
+              <div className="relative">
+                <Button variant="ghost" size="sm" className="relative">
+                  <Bell className="h-5 w-5" />
+                  {notifications > 0 && (
+                    <Badge className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center bg-red-500 text-white text-xs animate-bounce">
+                      {notifications}
+                    </Badge>
+                  )}
+                </Button>
+              </div>
+
+              {/* Wishlist */}
+              <Link href="/wishlist">
+                <Button variant="ghost" size="sm" className="relative">
+                  <Heart className="h-5 w-5" />
+                  {wishlist.length > 0 && (
+                    <Badge className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center bg-pink-500 text-white text-xs">
+                      {wishlist.length}
+                    </Badge>
+                  )}
+                </Button>
+              </Link>
+
+              {/* User Menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="flex items-center space-x-2">
+                    <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                      <User className="h-4 w-4 text-white" />
+                    </div>
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <div className="px-3 py-2 border-b">
+                    <p className="font-medium">Welcome back!</p>
+                    <p className="text-sm text-gray-500">user@example.com</p>
+                  </div>
+                  <DropdownMenuItem asChild>
+                    <Link href="/auth/login">Login</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/auth/signup">Sign Up</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin">Admin Dashboard</Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Mobile Menu Button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="md:hidden"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
+                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </Button>
+            </div>
+          </div>
+
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+            <div className="md:hidden border-t bg-white/95 backdrop-blur-md">
+              <div className="px-4 py-4 space-y-4">
+                <form onSubmit={handleSearch} className="flex space-x-2">
+                  <Input
+                    type="text"
+                    placeholder="Search..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button type="submit" size="sm">
+                    <Search className="h-4 w-4" />
+                  </Button>
+                </form>
+                <div className="space-y-2">
+                  <Link href="/categories" className="block py-2 text-gray-700 hover:text-orange-600">
+                    Categories
+                  </Link>
+                  <Link href="/stores" className="block py-2 text-gray-700 hover:text-orange-600">
+                    Stores
+                  </Link>
+                  <Link href="/gift-cards" className="block py-2 text-gray-700 hover:text-orange-600">
+                    Gift Cards
+                  </Link>
+                  <Link href="/deals" className="block py-2 text-gray-700 hover:text-orange-600">
+                    Hot Deals
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </nav>
+
+      {/* Animated Hero Section */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-purple-600 via-pink-600 to-orange-500 text-white">
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-600/50 to-transparent"></div>
+
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-yellow-400/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <div className="text-center">
+            <div className="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full mb-6 animate-bounce">
+              <Sparkles className="h-4 w-4 mr-2" />
+              <span className="text-sm font-medium">India's #1 Cashback Platform</span>
+            </div>
+
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fade-in">
+              Save More,
               <span className="block bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">
-                Fayeda Club
+                Spend Less
               </span>
             </h1>
 
-            <p className="text-xl md:text-2xl mb-8 text-white/90 max-w-2xl mx-auto">
-              Discover exclusive deals, earn cashback, and save thousands on your favorite brands
+            <p className="text-xl md:text-2xl text-purple-100 max-w-3xl mx-auto mb-8 animate-fade-in-delay">
+              Get the best deals, coupons, and cashback offers from top brands. Join millions of smart shoppers saving
+              money every day!
             </p>
 
-            {/* Search Bar */}
-            <div className="max-w-2xl mx-auto mb-8">
-              <div className="relative">
-                <Search className="absolute left-6 top-1/2 transform -translate-y-1/2 text-gray-400 w-6 h-6" />
-                <Input
-                  type="text"
-                  placeholder="Search for stores, deals, or categories..."
-                  className="pl-14 pr-6 py-4 text-lg rounded-full border-0 bg-white/95 backdrop-blur-sm shadow-xl focus:ring-4 focus:ring-white/30"
-                />
-                <Button
-                  size="lg"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 px-8"
-                >
-                  Search
-                </Button>
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto mb-12">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-yellow-300">₹50L+</div>
+                <div className="text-sm text-purple-200">Money Saved</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-yellow-300">10L+</div>
+                <div className="text-sm text-purple-200">Happy Users</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-yellow-300">500+</div>
+                <div className="text-sm text-purple-200">Brand Partners</div>
               </div>
             </div>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link href="/stores">
+            <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
+              <Link href="/categories">
                 <Button
                   size="lg"
-                  className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-4 text-lg font-semibold rounded-full shadow-xl"
+                  className="bg-white text-purple-600 hover:bg-gray-100 px-8 py-4 text-lg font-semibold rounded-full shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
                 >
-                  <ShoppingBag className="w-5 h-5 mr-2" />
-                  Explore Stores
+                  <ShoppingBag className="h-5 w-5 mr-2" />
+                  Start Shopping
                 </Button>
               </Link>
               <Link href="/gift-cards">
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-white text-white hover:bg-white hover:text-blue-600 px-8 py-4 text-lg font-semibold rounded-full bg-transparent"
+                  className="border-white text-white hover:bg-white hover:text-purple-600 px-8 py-4 text-lg font-semibold rounded-full bg-transparent"
                 >
-                  <Gift className="w-5 h-5 mr-2" />
+                  <Gift className="h-5 w-5 mr-2" />
                   Gift Cards
                 </Button>
               </Link>
@@ -252,214 +383,199 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center group">
-                <div
-                  className={`w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r ${stat.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}
-                >
-                  <stat.icon className="w-8 h-8 text-white" />
-                </div>
-                <div className="text-3xl font-bold text-gray-900 mb-2">{stat.value}</div>
-                <div className="text-gray-600">{stat.label}</div>
-              </div>
-            ))}
+      {/* Live Stats Bar */}
+      <section className="bg-gradient-to-r from-green-500 to-teal-500 text-white py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-center space-x-8 text-sm font-medium">
+            <div className="flex items-center">
+              <div className="w-2 h-2 bg-green-300 rounded-full animate-pulse mr-2"></div>
+              <span>🔥 2,847 deals active now</span>
+            </div>
+            <div className="hidden md:flex items-center">
+              <Users className="h-4 w-4 mr-1" />
+              <span>12,456 users saved money today</span>
+            </div>
+            <div className="hidden lg:flex items-center">
+              <Target className="h-4 w-4 mr-1" />
+              <span>Average savings: ₹1,247 per user</span>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Top Deals Section */}
-      <section className="py-16 bg-gradient-to-r from-orange-50 to-red-50">
-        <div className="container mx-auto px-4">
+      {/* Top Deals Carousel */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <div className="flex items-center justify-center mb-4">
-              <Zap className="w-8 h-8 text-orange-500 mr-3" />
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900">Top Deals of the Day</h2>
-            </div>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">🔥 Today's Top Deals</h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Limited time offers that you can't miss. Grab them before they're gone!
+              Handpicked deals that save you the most money. Limited time offers!
             </p>
-
-            {/* Countdown Timer */}
-            <div className="flex items-center justify-center mt-6 space-x-4">
-              <div className="bg-white rounded-lg p-3 shadow-lg">
-                <div className="text-2xl font-bold text-orange-600">{timeLeft.hours.toString().padStart(2, "0")}</div>
-                <div className="text-xs text-gray-500">Hours</div>
-              </div>
-              <div className="text-2xl font-bold text-orange-600">:</div>
-              <div className="bg-white rounded-lg p-3 shadow-lg">
-                <div className="text-2xl font-bold text-orange-600">{timeLeft.minutes.toString().padStart(2, "0")}</div>
-                <div className="text-xs text-gray-500">Minutes</div>
-              </div>
-              <div className="text-2xl font-bold text-orange-600">:</div>
-              <div className="bg-white rounded-lg p-3 shadow-lg">
-                <div className="text-2xl font-bold text-orange-600">{timeLeft.seconds.toString().padStart(2, "0")}</div>
-                <div className="text-xs text-gray-500">Seconds</div>
-              </div>
-            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {topDeals.map((deal) => (
-              <Card
-                key={deal.id}
-                className="group hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 bg-white border-0 shadow-lg overflow-hidden"
+          <div className="relative">
+            <div className="overflow-hidden rounded-2xl shadow-2xl">
+              <div
+                className="flex transition-transform duration-500 ease-in-out"
+                style={{ transform: `translateX(-${currentDealIndex * 100}%)` }}
               >
-                {deal.featured && (
-                  <div className="absolute top-4 left-4 z-10">
-                    <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-semibold">
-                      <Star className="w-3 h-3 mr-1" />
-                      Featured
-                    </Badge>
-                  </div>
-                )}
-
-                <div className="relative">
-                  <div className="bg-gradient-to-r from-blue-500 to-purple-500 h-32 flex items-center justify-center">
-                    <Image
-                      src={deal.logo || "/placeholder.svg"}
-                      alt={deal.store}
-                      width={80}
-                      height={80}
-                      className="rounded-lg shadow-lg bg-white p-2"
-                    />
-                  </div>
-                  <div className="absolute top-4 right-4">
-                    <Button variant="ghost" size="sm" className="bg-white/20 hover:bg-white/30 text-white">
-                      <Heart className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <Badge variant="outline" className="text-xs">
-                      {deal.category}
-                    </Badge>
-                    <div className="flex items-center space-x-1">
-                      <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                      <span className="text-sm font-medium">{deal.rating}</span>
-                    </div>
-                  </div>
-                  <CardTitle className="text-lg group-hover:text-blue-600 transition-colors">{deal.title}</CardTitle>
-                  <CardDescription className="text-sm">{deal.description}</CardDescription>
-                </CardHeader>
-
-                <CardContent className="pt-0">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="text-2xl font-bold text-green-600">{deal.discount}</div>
-                      <div className="text-right">
-                        <div className="text-sm text-gray-500">Used by</div>
-                        <div className="font-semibold">{deal.users} users</div>
-                      </div>
-                    </div>
-
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-gray-600">Coupon Code</span>
-                        <div className="flex items-center space-x-1 text-orange-600">
-                          <Clock className="w-4 h-4" />
-                          <span className="text-sm font-medium">{deal.timeLeft} left</span>
+                {topDealsData.map((deal, index) => (
+                  <div key={deal.id} className="w-full flex-shrink-0">
+                    <div className={`relative h-96 bg-gradient-to-r ${deal.bgColor} text-white overflow-hidden`}>
+                      <div className="absolute inset-0 bg-black/20"></div>
+                      <div className="relative h-full flex items-center">
+                        <div className="max-w-7xl mx-auto px-8 grid md:grid-cols-2 gap-8 items-center">
+                          <div>
+                            <Badge className="mb-4 bg-white/20 text-white border-white/30">
+                              <Clock className="h-3 w-3 mr-1" />
+                              Limited Time
+                            </Badge>
+                            <h3 className="text-4xl font-bold mb-2">{deal.title}</h3>
+                            <p className="text-2xl font-semibold text-yellow-300 mb-2">{deal.subtitle}</p>
+                            <p className="text-lg text-white/90 mb-6">{deal.description}</p>
+                            <Link href={deal.link}>
+                              <Button
+                                size="lg"
+                                className="bg-white text-gray-900 hover:bg-gray-100 px-8 py-4 text-lg font-semibold rounded-full shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
+                              >
+                                {deal.cta}
+                                <ArrowRight className="h-5 w-5 ml-2" />
+                              </Button>
+                            </Link>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            {deal.products.map((product, idx) => (
+                              <div key={idx} className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
+                                <Image
+                                  src={product.image || "/placeholder.svg"}
+                                  alt={product.name}
+                                  width={60}
+                                  height={60}
+                                  className="mx-auto mb-2 rounded-lg"
+                                />
+                                <p className="font-medium text-sm">{product.name}</p>
+                                <p className="text-yellow-300 text-xs font-semibold">{product.discount}</p>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <code className="flex-1 bg-white border-2 border-dashed border-blue-300 rounded px-3 py-2 font-mono text-sm font-bold text-blue-600">
-                          {deal.code}
-                        </code>
-                        <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                          Copy
-                        </Button>
-                      </div>
                     </div>
-
-                    <Button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 group-hover:scale-105 transition-transform">
-                      Shop Now
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
+                ))}
+              </div>
+            </div>
+
+            {/* Carousel Indicators */}
+            <div className="flex justify-center mt-6 space-x-2">
+              {topDealsData.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentDealIndex(index)}
+                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                    index === currentDealIndex ? "bg-orange-500 w-8" : "bg-gray-300 hover:bg-gray-400"
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Categories */}
+      <section className="py-16 bg-gradient-to-br from-gray-50 to-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Shop by Category</h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Discover amazing deals across all your favorite shopping categories
+            </p>
           </div>
 
-          <div className="text-center mt-12">
-            <Link href="/deals">
-              <Button
-                size="lg"
-                variant="outline"
-                className="bg-white hover:bg-gray-50 px-8 py-4 text-lg font-semibold rounded-full shadow-lg"
-              >
-                View All Deals
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-            </Link>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {categories.map((category, index) => (
+              <Link key={index} href={category.link}>
+                <Card className="group hover:shadow-2xl transition-all duration-500 hover:scale-105 cursor-pointer overflow-hidden border-0 bg-white/80 backdrop-blur-sm">
+                  <div className={`h-2 bg-gradient-to-r ${category.color}`}></div>
+                  <CardHeader className="text-center pb-4">
+                    <div className="relative mb-4">
+                      <div className="text-6xl mb-2 group-hover:scale-110 transition-transform duration-300">
+                        {category.icon}
+                      </div>
+                      <Badge className="absolute -top-2 -right-2 bg-red-500 text-white animate-pulse">
+                        <TrendingUp className="h-3 w-3 mr-1" />
+                        Hot
+                      </Badge>
+                    </div>
+                    <CardTitle className="text-2xl group-hover:text-orange-600 transition-colors">
+                      {category.name}
+                    </CardTitle>
+                    <CardDescription className="text-gray-600">{category.deals} active deals</CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="relative h-32 mb-4 rounded-lg overflow-hidden">
+                      <Image
+                        src={category.image || "/placeholder.svg"}
+                        alt={category.name}
+                        fill
+                        className="object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                      <div className="absolute bottom-2 left-2 text-white font-semibold">Up to 70% OFF</div>
+                    </div>
+                    <Button
+                      className={`w-full bg-gradient-to-r ${category.color} hover:opacity-90 text-white font-semibold py-3 rounded-full`}
+                    >
+                      Explore Deals
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Featured Stores */}
       <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Featured Stores</h2>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">🏪 Featured Stores</h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Shop from your favorite brands and earn amazing cashback rewards
+              Shop from India's most trusted brands and get exclusive cashback
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {featuredStores.map((store, index) => (
               <Card
                 key={index}
-                className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white border-0 shadow-lg"
+                className="group hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer"
               >
-                <CardHeader className="text-center pb-4">
-                  <div className="w-20 h-20 mx-auto mb-4 bg-gray-50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <CardContent className="p-6 text-center">
+                  <div className="relative mb-4">
                     <Image
                       src={store.logo || "/placeholder.svg"}
                       alt={store.name}
-                      width={60}
-                      height={60}
-                      className="rounded-lg"
+                      width={80}
+                      height={80}
+                      className="mx-auto rounded-lg group-hover:scale-110 transition-transform duration-300"
                     />
+                    <Badge className="absolute -top-2 -right-2 bg-green-500 text-white">
+                      <Percent className="h-3 w-3 mr-1" />
+                      Cashback
+                    </Badge>
                   </div>
-                  <CardTitle className="text-xl group-hover:text-blue-600 transition-colors">{store.name}</CardTitle>
-                  <CardDescription className="text-sm">{store.description}</CardDescription>
-                </CardHeader>
-
-                <CardContent className="pt-0">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <Badge variant="outline" className="text-xs">
-                        {store.category}
-                      </Badge>
-                      <div className="flex items-center space-x-1">
-                        <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                        <span className="text-sm font-medium">{store.rating}</span>
-                      </div>
-                    </div>
-
-                    <div className="bg-green-50 rounded-lg p-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Cashback</span>
-                        <span className="text-lg font-bold text-green-600">{store.cashback}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Active Coupons</span>
-                      <span className="font-semibold">{store.totalCoupons}</span>
-                    </div>
-
-                    <Button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 group-hover:scale-105 transition-transform">
-                      Visit Store
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">{store.name}</h3>
+                  <p className="text-green-600 font-semibold mb-4">{store.cashback} Cashback</p>
+                  <Button
+                    onClick={() => handleShopNow(store.url, store.name)}
+                    className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold py-2 rounded-full"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Shop Now
+                  </Button>
                 </CardContent>
               </Card>
             ))}
@@ -470,155 +586,220 @@ export default function HomePage() {
               <Button
                 size="lg"
                 variant="outline"
-                className="bg-white hover:bg-gray-50 px-8 py-4 text-lg font-semibold rounded-full shadow-lg"
+                className="px-8 py-4 text-lg font-semibold rounded-full border-2 border-orange-500 text-orange-600 hover:bg-orange-500 hover:text-white bg-transparent"
               >
                 View All Stores
-                <ArrowRight className="w-5 h-5 ml-2" />
+                <ArrowRight className="h-5 w-5 ml-2" />
               </Button>
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Categories */}
-      <section className="py-16 bg-gradient-to-r from-purple-50 to-pink-50">
-        <div className="container mx-auto px-4">
+      {/* Hot Coupons */}
+      <section className="py-16 bg-gradient-to-br from-orange-50 to-red-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Shop by Category</h2>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">🔥 Hot Coupons</h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Find the best deals across all your favorite categories
+              Trending coupon codes that are saving users the most money right now
             </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-            {categories.map((category, index) => (
-              <Link key={index} href={`/category/${category.name.toLowerCase().replace(" & ", "-")}`}>
-                <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 bg-white border-0 shadow-lg cursor-pointer">
-                  <CardContent className="p-6 text-center">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                      <span className="text-2xl">{category.icon}</span>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {featuredCoupons.map((coupon) => (
+              <Card
+                key={coupon.id}
+                className="group hover:shadow-xl transition-all duration-300 hover:scale-105 bg-white/80 backdrop-blur-sm border-0"
+              >
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-2">
+                      <Image
+                        src={coupon.storeLogo || "/placeholder.svg"}
+                        alt={coupon.store}
+                        width={24}
+                        height={24}
+                        className="rounded"
+                      />
+                      <Badge variant="secondary">{coupon.store}</Badge>
+                      <Badge className="bg-red-500 text-white animate-pulse">
+                        <Zap className="h-3 w-3 mr-1" />
+                        Hot
+                      </Badge>
                     </div>
-                    <h3 className="font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
-                      {category.name}
-                    </h3>
-                    <p className="text-sm text-gray-600">{category.deals} deals</p>
-                  </CardContent>
-                </Card>
-              </Link>
+                    <Button variant="ghost" size="sm" onClick={() => toggleWishlist(coupon.id)} className="p-1">
+                      <Heart
+                        className={`h-4 w-4 ${wishlist.includes(coupon.id) ? "fill-red-500 text-red-500" : "text-gray-400"}`}
+                      />
+                    </Button>
+                  </div>
+                  <CardTitle className="text-lg leading-tight group-hover:text-orange-600 transition-colors">
+                    {coupon.title}
+                  </CardTitle>
+                  <CardDescription className="text-sm">{coupon.description}</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="text-green-600 font-bold text-lg">Save {coupon.savings}</div>
+                    <div className="flex items-center text-sm text-gray-500">
+                      <Clock className="h-4 w-4 mr-1" />
+                      {coupon.expiryDays}d left
+                    </div>
+                  </div>
+
+                  {coupon.type === "code" ? (
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold py-3 rounded-full">
+                          <Tag className="h-4 w-4 mr-2" />
+                          Reveal Coupon
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                          <DialogTitle className="flex items-center">
+                            <Image
+                              src={coupon.storeLogo || "/placeholder.svg"}
+                              alt={coupon.store}
+                              width={24}
+                              height={24}
+                              className="rounded mr-2"
+                            />
+                            {coupon.title}
+                          </DialogTitle>
+                          <DialogDescription>
+                            Copy this coupon code and use it at {coupon.store} checkout to save {coupon.savings}
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="flex items-center space-x-2">
+                          <div className="grid flex-1 gap-2">
+                            <div className="flex items-center justify-center p-6 bg-gradient-to-r from-orange-100 to-red-100 rounded-lg border-2 border-dashed border-orange-300">
+                              <code className="text-3xl font-bold text-orange-600">{coupon.code}</code>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex space-x-2">
+                          <Button
+                            onClick={() => handleCopyCode(coupon.code)}
+                            className="flex-1"
+                            variant={copiedCode === coupon.code ? "secondary" : "default"}
+                          >
+                            <Copy className="h-4 w-4 mr-2" />
+                            {copiedCode === coupon.code ? "Copied!" : "Copy Code"}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="flex-1 bg-transparent"
+                            onClick={() => handleShopNow(`https://${coupon.store.toLowerCase()}.com`, coupon.store)}
+                          >
+                            <ExternalLink className="h-4 w-4 mr-2" />
+                            Visit {coupon.store}
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  ) : (
+                    <Button
+                      onClick={() => handleShopNow(`https://${coupon.store.toLowerCase()}.com`, coupon.store)}
+                      className="w-full bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white font-semibold py-3 rounded-full"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Get Deal
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
             ))}
+          </div>
+
+          <div className="text-center mt-12">
+            <Link href="/deals">
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-8 py-4 text-lg font-semibold rounded-full shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
+              >
+                View All Deals
+                <ArrowRight className="h-5 w-5 ml-2" />
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-black/20"></div>
-        <div className="absolute inset-0">
-          <div className="absolute top-10 left-10 w-32 h-32 bg-white/10 rounded-full animate-float"></div>
-          <div
-            className="absolute bottom-10 right-10 w-24 h-24 bg-white/10 rounded-full animate-float"
-            style={{ animationDelay: "1s" }}
-          ></div>
-        </div>
-
-        <div className="relative container mx-auto px-4 text-center">
-          <div className="max-w-3xl mx-auto">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">Ready to Start Saving?</h2>
-            <p className="text-xl md:text-2xl mb-8 text-white/90">
-              Join thousands of smart shoppers who save money every day with Fayeda Club
+      {/* Newsletter Signup */}
+      <section className="py-16 bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="mb-8">
+            <h2 className="text-4xl font-bold mb-4">Never Miss a Deal!</h2>
+            <p className="text-xl text-purple-100">
+              Get the latest coupons, deals, and cashback offers delivered to your inbox
             </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link href="/auth/signup">
-                <Button
-                  size="lg"
-                  className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-4 text-lg font-semibold rounded-full shadow-xl"
-                >
-                  <Sparkles className="w-5 h-5 mr-2" />
-                  Get Started Free
-                </Button>
-              </Link>
-              <Link href="/about">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="border-white text-white hover:bg-white hover:text-blue-600 px-8 py-4 text-lg font-semibold rounded-full bg-transparent"
-                >
-                  Learn More
-                </Button>
-              </Link>
-            </div>
-
-            <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-              <div className="flex items-center justify-center space-x-2">
-                <CheckCircle className="w-6 h-6 text-green-300" />
-                <span className="text-lg">100% Free to Join</span>
-              </div>
-              <div className="flex items-center justify-center space-x-2">
-                <CheckCircle className="w-6 h-6 text-green-300" />
-                <span className="text-lg">Instant Cashback</span>
-              </div>
-              <div className="flex items-center justify-center space-x-2">
-                <CheckCircle className="w-6 h-6 text-green-300" />
-                <span className="text-lg">500+ Partner Stores</span>
-              </div>
-            </div>
           </div>
+
+          <form className="flex flex-col sm:flex-row max-w-md mx-auto space-y-4 sm:space-y-0 sm:space-x-4">
+            <Input
+              type="email"
+              placeholder="Enter your email address"
+              className="flex-1 bg-white/20 border-white/30 text-white placeholder-white/70 focus:bg-white/30"
+            />
+            <Button className="bg-white text-purple-600 hover:bg-gray-100 font-semibold px-8">Subscribe</Button>
+          </form>
+
+          <p className="text-sm text-purple-200 mt-4">Join 100,000+ smart shoppers. Unsubscribe anytime.</p>
         </div>
       </section>
 
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-16">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-3 mb-6">
                 <Image src="/logo.png" alt="Fayeda Club" width={40} height={40} className="rounded-lg" />
                 <div>
-                  <h3 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                  <h3 className="text-xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
                     Fayeda Club
                   </h3>
-                  <p className="text-sm text-gray-400">Save More ✨</p>
+                  <p className="text-sm text-gray-400">Save More, Spend Less</p>
                 </div>
               </div>
-              <p className="text-gray-400 mb-6">
-                India's leading cashback and deals platform. Save money on every purchase with exclusive offers and
-                rewards.
+              <p className="text-gray-400 mb-4">
+                India's leading cashback and coupon platform helping millions save money on their favorite brands.
               </p>
               <div className="flex space-x-4">
-                <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
-                  Facebook
-                </Button>
-                <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
-                  Twitter
-                </Button>
-                <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
-                  Instagram
-                </Button>
+                <Badge className="bg-green-500">
+                  <Award className="h-3 w-3 mr-1" />
+                  Trusted
+                </Badge>
+                <Badge className="bg-blue-500">
+                  <Users className="h-3 w-3 mr-1" />
+                  10L+ Users
+                </Badge>
               </div>
             </div>
 
             <div>
-              <h4 className="text-lg font-semibold mb-6">Quick Links</h4>
-              <div className="space-y-3">
-                <Link href="/stores" className="block text-gray-400 hover:text-white transition-colors">
-                  All Stores
-                </Link>
+              <h4 className="font-semibold mb-4">Quick Links</h4>
+              <div className="space-y-2">
                 <Link href="/categories" className="block text-gray-400 hover:text-white transition-colors">
                   Categories
                 </Link>
-                <Link href="/deals" className="block text-gray-400 hover:text-white transition-colors">
-                  Top Deals
+                <Link href="/stores" className="block text-gray-400 hover:text-white transition-colors">
+                  Stores
                 </Link>
                 <Link href="/gift-cards" className="block text-gray-400 hover:text-white transition-colors">
                   Gift Cards
                 </Link>
+                <Link href="/deals" className="block text-gray-400 hover:text-white transition-colors">
+                  Hot Deals
+                </Link>
               </div>
             </div>
 
             <div>
-              <h4 className="text-lg font-semibold mb-6">Support</h4>
-              <div className="space-y-3">
+              <h4 className="font-semibold mb-4">Support</h4>
+              <div className="space-y-2">
                 <Link href="/help" className="block text-gray-400 hover:text-white transition-colors">
                   Help Center
                 </Link>
@@ -629,23 +810,26 @@ export default function HomePage() {
                   About Us
                 </Link>
                 <Link href="/terms" className="block text-gray-400 hover:text-white transition-colors">
-                  Terms & Conditions
+                  Terms of Service
                 </Link>
               </div>
             </div>
 
             <div>
-              <h4 className="text-lg font-semibold mb-6">Newsletter</h4>
-              <p className="text-gray-400 mb-4">Subscribe to get the latest deals and offers directly in your inbox.</p>
-              <div className="space-y-3">
-                <Input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="bg-gray-800 border-gray-700 text-white placeholder-gray-400"
-                />
-                <Button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                  Subscribe
-                </Button>
+              <h4 className="font-semibold mb-4">Legal</h4>
+              <div className="space-y-2">
+                <Link href="/privacy" className="block text-gray-400 hover:text-white transition-colors">
+                  Privacy Policy
+                </Link>
+                <Link href="/terms" className="block text-gray-400 hover:text-white transition-colors">
+                  Terms & Conditions
+                </Link>
+                <a
+                  href="mailto:support@fayedaclub.com"
+                  className="block text-gray-400 hover:text-white transition-colors"
+                >
+                  support@fayedaclub.com
+                </a>
               </div>
             </div>
           </div>

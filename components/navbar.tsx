@@ -1,6 +1,8 @@
 "use client"
 
+import type React from "react"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -33,6 +35,14 @@ import {
 
 export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState("")
+  const router = useRouter()
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
+    }
+  }
 
   const categories = [
     {
@@ -124,24 +134,21 @@ export default function Navbar() {
             </div>
           </Link>
 
-          {/* Search Bar */}
+          {/* Enhanced Search Bar */}
           <div className="flex-1 max-w-2xl mx-8">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <form onSubmit={handleSearch} className="search-container">
+              <Search className="search-icon w-5 h-5" />
               <Input
                 type="text"
                 placeholder="Search for stores, deals, or categories..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-12 pr-6 py-3 w-full rounded-full border-2 border-gray-200 focus:border-blue-500 focus:ring-blue-500 text-lg"
+                className="search-input"
               />
-              <Button
-                size="lg"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 px-6"
-              >
+              <Button type="submit" className="search-button">
                 Search
               </Button>
-            </div>
+            </form>
           </div>
 
           {/* Right Side Actions */}
@@ -151,7 +158,7 @@ export default function Navbar() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="relative">
                   <Bell className="w-5 h-5" />
-                  <Badge className="absolute -top-1 -right-1 w-5 h-5 p-0 flex items-center justify-center bg-red-500 text-white text-xs">
+                  <Badge className="absolute -top-1 -right-1 w-5 h-5 p-0 flex items-center justify-center bg-red-500 text-white text-xs animate-pulse">
                     3
                   </Badge>
                 </Button>
@@ -196,12 +203,14 @@ export default function Navbar() {
             </DropdownMenu>
 
             {/* Wishlist */}
-            <Button variant="ghost" size="sm" className="relative">
-              <Heart className="w-5 h-5" />
-              <Badge className="absolute -top-1 -right-1 w-5 h-5 p-0 flex items-center justify-center bg-pink-500 text-white text-xs">
-                7
-              </Badge>
-            </Button>
+            <Link href="/wishlist">
+              <Button variant="ghost" size="sm" className="relative">
+                <Heart className="w-5 h-5" />
+                <Badge className="absolute -top-1 -right-1 w-5 h-5 p-0 flex items-center justify-center bg-pink-500 text-white text-xs">
+                  7
+                </Badge>
+              </Button>
+            </Link>
 
             {/* User Menu */}
             <DropdownMenu>
@@ -363,7 +372,7 @@ export default function Navbar() {
                   <Button variant="ghost" className="flex items-center space-x-2 font-medium text-orange-600">
                     <Percent className="w-4 h-4" />
                     <span>Top Deals</span>
-                    <Badge className="bg-red-500 text-white text-xs">Hot</Badge>
+                    <Badge className="bg-red-500 text-white text-xs animate-pulse">Hot</Badge>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-80 p-4">
